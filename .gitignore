@@ -1,4 +1,8 @@
-raw_data/
+# Project Files
+data/*
+*.ipynb
+*.parquet
+notebook/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

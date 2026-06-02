@@ -4,21 +4,23 @@ from cleaner import clean_data
 import pyarrow as pa
 import pyarrow.parquet as pq
 from sklearn.model_selection import train_test_split
-from model import train_model, evaluate_model, predict
+# from model import train_model, evaluate_model, predict
 from datetime import datetime
+from stopwords import stopwords
+from vectorizer import vectorizer
+from preproc_smote import oversampling_smote
 
-
-def preprocess(df, lemma=False, stopwords=False, smote=False, vectorising=False):
+def preprocess(df, lem=False, stop=False, smot=False, vector=False):
 
     # 1. Clean data
     df = clean_data(df)
 
     # 2. Stopwords
-    if stopwords:
-        df = remove_stopwords(df)
+    if stop:
+        df = stopwords(df)
 
     # 3. Lemmatize
-    if lemma:
+    if lem:
         df = lemmatize(df)
 
     # 4. Create X, y
@@ -29,12 +31,12 @@ def preprocess(df, lemma=False, stopwords=False, smote=False, vectorising=False)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     # 6. Vectorize
-    if vectorising:
-        X_train = vectorize(X_train)
-        X_test = vectorize(X_test)
+    if vector:
+        X_train = vectorizer(X_train)
+        X_test = vectorizer(X_test)
 
     # 7. SMOTE
-    if smote:
+    if smot:
         X_train, y_train = oversampling_smote(X_train, y_train)
 
     # 8. Save
@@ -56,7 +58,7 @@ def preprocess(df, lemma=False, stopwords=False, smote=False, vectorising=False)
 #     pass
 
 if __name__ == "__main__":
-    DATA_PATH = 'data/raw_data/sample_10k.parquet'
+    DATA_PATH = '../data/raw_data/sample_10k.parquet'
     df = pd.read_parquet(DATA_PATH)
     X_train, X_test, y_train, y_test = preprocess(df)
     # train(X_train, y_train)

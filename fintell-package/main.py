@@ -9,9 +9,9 @@ from datetime import datetime
 from stopwords import stopwords
 from vectorizer import vectorizer
 from preproc_smote import oversampling_smote
-from lemmatizer import lemmatizer_avis
+from lemmatizer import lemmatizer
 
-def preprocess_sentiment(df, lem=True, stop=True, smot=True, vector=True):
+def preprocess_sentiment(df, lem=True, stop=True, smot=False, vector=True):
 
     # 1. Clean data
     df = clean_data(df)
@@ -22,7 +22,7 @@ def preprocess_sentiment(df, lem=True, stop=True, smot=True, vector=True):
 
     # 3. Lemmatize
     if lem:
-        df = lemmatize(df)
+        df['review_text'] = df['review_text'].apply(lemmatizer)
 
     # 4. Create X, y
     X = df['review_text']

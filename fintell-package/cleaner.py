@@ -43,12 +43,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
     # Remove useless colomns
-    df = df.drop(['thumbs_up',
-       'replied', 'reply_text', 'reply_date', 'time_to_reply(h)',
-       'app_version_head', 'app_version_detail', 'Consistent',
-       'reply_sentiment', 'reply_sentiment_label', 'topic_label_NEG',
-       'topic_prob_NEG', 'topic_id_POS', 'topic_label_POS', 'topic_prob_POS', 'topic_id_NEG', 'word_count'
-        ], axis=1)
+    df = df[['review_text', 'topic_label_ALL', 'review_sentiment_label']]
 
     # Basic cleaning
     df['review_text'] = df.review_text.apply(basic_cleaning)

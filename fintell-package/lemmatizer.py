@@ -8,7 +8,7 @@ nlp = spacy.load(
 )
 
 
-def lemmatiser_avis(texte: str) -> str:
+def lemmatizer(texte: str) -> str:
 
     # Création du document spaCy
     doc = nlp(texte)
@@ -21,9 +21,3 @@ def lemmatiser_avis(texte: str) -> str:
 
     # Reconstruction de la phrase sous forme de chaîne de caractères
     return " ".join(lemmes)
-
-# Application de la fonction à la colonne review_text
-df["review_text_lemma"] = df["review_text"][:10].apply(lemmatiser_avis)
-
-# Affichage des premières lignes pour vérifier le résultat
-df[["review_text", "review_text_lemma"]].head(10)

@@ -70,7 +70,7 @@ def oversampling_smote(X_train : pd.DataFrame,
 
 
     smote = SMOTE(
-        sample_strategy='not_majority',
+        sampling_strategy='not majority',
         random_state = random_state,
         k_neighbors = k_neighbors
     )
@@ -80,6 +80,6 @@ def oversampling_smote(X_train : pd.DataFrame,
         y_train
     )
 
-    print("Over sampling completed ✅")
+    print("✅ Over sampling completed")
 
     return X_train_smote, y_train_smote

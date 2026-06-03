@@ -7,3 +7,10 @@ imbalanced-learn==0.14.1
 nltk==3.9.4
 arrow==1.4.0
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+
+
+#GCP
+google-cloud-bigquery==3.41.0
+google-cloud-storage==3.10.1
+pandas-gbq==0.35.0
+db-dtypes==1.6.0

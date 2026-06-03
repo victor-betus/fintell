@@ -1,1 +1,1 @@
-#PREPROCESSING
+MODEL_NAME = 'svc'

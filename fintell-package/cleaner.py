@@ -17,6 +17,8 @@ def basic_cleaning(sentence):
 
     return sentence
 
+    # Removing smileys ? 
+
     # $CHALLENGIFY_END
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:

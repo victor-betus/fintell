@@ -55,7 +55,7 @@ def preprocess_sentiment(df, lem=True, stop=True, smot=True, vector=True):
     # 8. Save
     print("💾 Saving preprocessed data...")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_path = f"/home/vicb2/code/victor-betus/fintell/data/preprocessed_data/reviews_{timestamp}_lemma-{'T' if lem else 'F'}_stop-{'T' if stop else 'F'}_smote-{'T' if smot else 'F'}.parquet"
+    output_path = f"../data/preprocessed_data/reviews_{timestamp}_lemma-{'T' if lem else 'F'}_stop-{'T' if stop else 'F'}_smote-{'T' if smot else 'F'}.parquet"
     df_processed = pd.DataFrame({'review_text': X, 'label': y})
     df_processed.to_parquet(output_path)
     print(f"✅ Saved to {output_path}")

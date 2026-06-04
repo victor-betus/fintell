@@ -14,5 +14,16 @@ PREPROCESS_SMOTE     = os.getenv("PREPROCESS_SMOTE",     "false").lower() == "tr
 PREPROCESS_VECTORIZE = os.getenv("PREPROCESS_VECTORIZE", "true").lower()  == "true"
 
 #FLAGS MODELS
-MODEL_NAME = os.environ.get('MODEL_NAME')
+MODEL_NAME = os.getenv("MODEL_NAME", "svc")
 
+# FLAGS GCS PREPROCESSED
+SAVE_PREPROCESSED = os.getenv("SAVE_PREPROCESSED", "false").lower() == "true"
+LOAD_PREPROCESSED = os.getenv("LOAD_PREPROCESSED", "false").lower() == "true"
+
+# FLAGS GCS MODEL
+SAVE_MODEL_GCS = os.getenv("SAVE_MODEL", "false").lower() == "true"
+LOAD_MODEL_GCS = os.getenv("LOAD_MODEL", "false").lower() == "true"
+
+# GCS
+GCS_PROJECT_ID  = os.getenv("GCS_PROJECT_ID")
+GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")

@@ -13,9 +13,16 @@ from smote import oversampling_smote
 from lemmatizer import lemmatizer
 from model import train_model, evaluate_model, predict_model
 from registry import load_model, save_model
-from params import MODEL_NAME
 
-def preprocess_sentiment(df, lem=False, stop=True, smot=True, vector=True, tfidf=None, split=''):
+# import params
+from params import (
+    MODEL_NAME,
+    RAW_DIR, PREPROCESSED_DIR,
+    PREPROCESS_LEMMATIZE, PREPROCESS_STOPWORDS,
+    PREPROCESS_SMOTE, PREPROCESS_VECTORIZE,
+)
+
+def preprocess_sentiment(df, tfidf=None, split=''):
 
     # 1. Clean data
     print(f"🧹 Cleaning data... {len(df)} rows")
@@ -23,13 +30,13 @@ def preprocess_sentiment(df, lem=False, stop=True, smot=True, vector=True, tfidf
     print(f"✅ Clean done — {len(df)} rows")
 
     # 2. Stopwords
-    if stop:
+    if PREPROCESS_STOPWORDS:
         print("🔇 Removing stopwords...")
         df = stopwords(df)
         print("✅ Stopwords done")
 
     # 3. Lemmatize
-    if lem:
+    if PREPROCESS_LEMMATIZE:
         print("🌿 Lemmatizing...")
         df['review_text'] = df['review_text'].apply(lemmatizer)
         print("✅ Lemmatization done")
@@ -46,13 +53,13 @@ def preprocess_sentiment(df, lem=False, stop=True, smot=True, vector=True, tfidf
     # 5. Save
     print("💾 Saving preprocessed data...")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_path = f"../data/preprocessed_data/{split}_reviews_{timestamp}_lemma-{'T' if lem else 'F'}_stop-{'T' if stop else 'F'}_smote-{'T' if smot else 'F'}.parquet"
+    output_path = PREPROCESSED_DIR / f"{split}_reviews_{timestamp}_lemma-{'T' if PREPROCESS_LEMMATIZE else 'F'}_stop-{'T' if PREPROCESS_STOPWORDS else 'F'}_smote-{'T' if PREPROCESS_SMOTE else 'F'}.parquet"
     df[['review_text', 'review_sentiment_label']].to_parquet(output_path)
     print(f"✅ Saved to {output_path}")
 
     # 6. Vectorize
     print('🔢 Vectorizing...')
-    if vector:
+    if PREPROCESS_VECTORIZE:
         if tfidf:
             print('🔢 Transforming ...')
             X = transform_vectorizer(X, tfidf)
@@ -65,7 +72,7 @@ def preprocess_sentiment(df, lem=False, stop=True, smot=True, vector=True, tfidf
             print('✅ Vectorization done')
 
     # 7. SMOTE
-    if smot:
+    if PREPROCESS_SMOTE:
         print("⚖️ Applying SMOTE...")
         X, y = oversampling_smote(X, y, random_state=42, k_neighbors=5)
         print("✅ SMOTE done")
@@ -94,18 +101,18 @@ if __name__ == "__main__":
 
     # TRAIN
     print("\n--- TRAIN ---")
-    df_train = pd.read_parquet('../data/raw_data/fintell_train.parquet')
+    df_train = pd.read_parquet(RAW_DIR / 'fintell_train.parquet')
     X, y, tfidf = preprocess_sentiment(df_train, split='train')
     model = train(X, y)
-    save_model(model, tfidf, model_name=MODEL_NAME)
+    save_model(model, tfidf)
     accuracy, f1, report = evaluate(X, y, model)
     print(f"accuracy: {accuracy:.4f} | f1: {f1:.4f}")
     print(report)
 
     # VAL
     print("\n--- VAL ---")
-    df_val = pd.read_parquet('../data/raw_data/fintell_val.parquet')
-    X, y, _ = preprocess_sentiment(df_val, tfidf=tfidf, smot=False, split='val')
+    df_val = pd.read_parquet(RAW_DIR / 'fintell_val.parquet')
+    X, y, _ = preprocess_sentiment(df_val, tfidf=tfidf, split='val')
     accuracy, f1, report = evaluate(X, y, model)
     print(f"accuracy: {accuracy:.4f} | f1: {f1:.4f}")
     print(report)

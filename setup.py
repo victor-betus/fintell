@@ -3,7 +3,14 @@ from setuptools import setup
 
 with open("requirements.txt") as f:
     content = f.readlines()
-requirements = [x.strip() for x in content if "git+" not in x]
+
+requirements = [x.strip() for x in content
+                if x.strip()
+                and not x.startswith('#')
+                and not x.startswith('http')]
+
+dependency_links = [x.strip() for x in content
+                    if x.strip() and x.startswith('http')]
 
 setup(name='fintell',
       version="0.0.1",
@@ -12,8 +19,7 @@ setup(name='fintell',
       author="Le Wagon",
       author_email="contact@lewagon.org",
       install_requires=requirements,
+      dependency_links=dependency_links,
       packages=find_packages(),
-      test_suite="tests",
-      # include_package_data: to install data from MANIFEST.in
       include_package_data=True,
       zip_safe=False)

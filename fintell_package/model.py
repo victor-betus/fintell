@@ -14,7 +14,7 @@ def train_model(X_train, y_train, model_name=None):
         model = RandomForestClassifier()
 
     elif model_name == 'naive_bayes':
-        model = MultinomialNB()
+        model = MultinomialNB(alpha=0.01)
 
     else:
         model = LogisticRegression()

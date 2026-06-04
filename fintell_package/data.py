@@ -98,3 +98,23 @@ def download_file_from_bucket(
     print(f"📄 Fichier : {destination.name}")
     print(f"📦 Taille : {file_size_mb:.2f} MB")
     print(f"📍 Stocké dans : {destination}")
+
+
+def get_latest_preprocessed_from_gcs(project_id, bucket_name, split, destination_dir):
+    client = storage.Client(project=project_id)
+    bucket = client.bucket(bucket_name)
+
+    blobs = sorted(
+        [b for b in bucket.list_blobs(prefix=f"processed_data/{split}_reviews_")],
+        key=lambda b: b.name
+    )
+
+    if not blobs:
+        raise FileNotFoundError(f"No preprocessed file found in GCS for split='{split}'")
+
+    latest = blobs[-1]
+    local_path = Path(destination_dir) / Path(latest.name).name
+
+    download_file_from_bucket(project_id, bucket_name, latest.name, str(local_path))
+
+    return local_path

@@ -1,8 +1,14 @@
 # Project Files
 data/*
+!data/raw_data/.gitkeep
+!data/preprocessed_data/.gitkeep
 *.ipynb
 *.parquet
 notebook/*
+notebooks/*
+!notebooks/.gitkeep
+models/*
+!models/.gitkeep
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

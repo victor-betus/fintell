@@ -33,4 +33,3 @@ def evaluate_model(X_test, y_test, model):
 def predict_model(X_new, model):
     y_pred_new = model.predict(X_new)
     return y_pred_new
-

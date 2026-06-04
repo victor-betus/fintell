@@ -20,9 +20,8 @@ MODEL_NAME = os.getenv("MODEL_NAME", "svc")
 SAVE_PREPROCESSED = os.getenv("SAVE_PREPROCESSED", "false").lower() == "true"
 LOAD_PREPROCESSED = os.getenv("LOAD_PREPROCESSED", "false").lower() == "true"
 
-# FLAGS GCS MODEL
-SAVE_MODEL_GCS = os.getenv("SAVE_MODEL", "false").lower() == "true"
-LOAD_MODEL_GCS = os.getenv("LOAD_MODEL", "false").lower() == "true"
+# TARGET
+MODEL_TARGET = os.getenv("MODEL_TARGET", "local")  # "local" | "gcs"
 
 # GCS
 GCS_PROJECT_ID  = os.getenv("GCS_PROJECT_ID")

@@ -2,8 +2,8 @@ import joblib
 from pathlib import Path
 from datetime import datetime
 from google.cloud import storage
-from data import upload_file_to_bucket, download_file_from_bucket
-from params import MODEL_DIR, MODEL_NAME, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET
+from fintell_package.data import upload_file_to_bucket, download_file_from_bucket
+from fintell_package.params import MODEL_DIR, MODEL_NAME, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET
 
 def save_model(model, tfidf, model_name=MODEL_NAME):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")

@@ -2,7 +2,7 @@ from pathlib import Path
 from google.cloud import storage
 from datetime import datetime
 
-from params import (
+from fintell_package.params import (
     MODEL_NAME,
     RAW_DIR, PREPROCESSED_DIR,
     PREPROCESS_LEMMATIZE, PREPROCESS_STOPWORDS,

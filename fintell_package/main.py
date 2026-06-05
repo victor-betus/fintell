@@ -123,7 +123,7 @@ def evaluate():
 def pred(X_test):
     pass
 
-# pas utilisé dans le
+# pas utilisé dans le code, mais utile si le make_run_all
 
 if __name__ == "__main__":
     df_train = pd.read_parquet(GCS_RAW_TRAIN)

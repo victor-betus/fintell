@@ -6,6 +6,12 @@ ROOT_DIR            = Path(__file__).resolve().parent.parent
 RAW_DIR             = ROOT_DIR / "data" / "raw_data"
 PREPROCESSED_DIR    = ROOT_DIR / "data" / "preprocessed_data"
 MODEL_DIR           = ROOT_DIR / "models"
+MODEL_DIR_ML        = MODEL_DIR / "ml"
+MODEL_DIR_DL        = MODEL_DIR / "dl"
+MODEL_DIR_DL_PLOTS = MODEL_DIR_DL / "plots"
+
+for d in [RAW_DIR, PREPROCESSED_DIR, MODEL_DIR_ML, MODEL_DIR_DL, MODEL_DIR_DL_PLOTS]:
+    d.mkdir(parents=True, exist_ok=True)
 
 #FLAGS PREPROCESSING
 PREPROCESS_LEMMATIZE = os.getenv("PREPROCESS_LEMMATIZE", "false").lower() == "true"

@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-#FILEPATHS
+# LOCAL FILEPATHS
 ROOT_DIR            = Path(__file__).resolve().parent.parent
 RAW_DIR             = ROOT_DIR / "data" / "raw_data"
 PREPROCESSED_DIR    = ROOT_DIR / "data" / "preprocessed_data"
@@ -26,3 +26,5 @@ MODEL_TARGET = os.getenv("MODEL_TARGET", "gcs")  # "local" | "gcs"
 # GCS
 GCS_PROJECT_ID  = os.getenv("GCS_PROJECT_ID")
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+GCS_RAW_TRAIN = f"gs://{GCS_BUCKET_NAME}/data/raw_data/fintell_train.parquet"
+GCS_RAW_VAL   = f"gs://{GCS_BUCKET_NAME}/data/raw_data/fintell_val.parquet"

@@ -24,13 +24,18 @@ from fintell_package.params import (
     PREPROCESS_SMOTE, PREPROCESS_VECTORIZE,
     SAVE_PREPROCESSED, LOAD_PREPROCESSED,
     MODEL_TARGET,
-    GCS_PROJECT_ID, GCS_BUCKET_NAME,
+    GCS_PROJECT_ID, GCS_BUCKET_NAME,GCS_RAW_TRAIN,GCS_RAW_VAL
 )
 
-def preprocess_sentiment(df, split=''):
+def preprocess_sentiment(split='train'):
+
+    # 0. Load data from GCS
+    print(f"📥 Loading {split} data from GCS...")
+    df = pd.read_parquet(GCS_RAW_TRAIN if split == 'train' else GCS_RAW_VAL)
+    print(f"✅ Loaded {len(df)} rows")
 
     # 1. Clean data
-    print(f"🧹 Cleaning data... {len(df)} rows")
+    print(f"🧹 Cleaning data...")
     df = clean_data(df)
     print(f"✅ Clean done — {len(df)} rows")
 
@@ -118,10 +123,11 @@ def evaluate():
 def pred(X_test):
     pass
 
+# pas utilisé dans le code, mais utile si le make_run_all
 
 if __name__ == "__main__":
-    df_train = pd.read_parquet(RAW_DIR / 'fintell_train.parquet')
-    df_val = pd.read_parquet(RAW_DIR / 'fintell_val.parquet')
+    df_train = pd.read_parquet(GCS_RAW_TRAIN)
+    df_val = pd.read_parquet(GCS_RAW_VAL)
 
     preprocess_sentiment(df_train, split='train')
     preprocess_sentiment(df_val, split='val')

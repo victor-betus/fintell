@@ -40,3 +40,6 @@ MODEL_NAME = os.getenv("MODEL_NAME", "svc")
 # DL HYPERPARAMS
 MAXLEN      = int(os.getenv("MAXLEN", "80"))
 VECTOR_SIZE = int(os.getenv("VECTOR_SIZE", "60"))
+
+# DEV
+SAMPLE_SIZE = int(os.getenv("SAMPLE_SIZE", "0"))  # 0 = pas de sampling

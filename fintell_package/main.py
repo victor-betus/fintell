@@ -126,21 +126,7 @@ def pred(X_test):
 # pas utilisé dans le code, mais utile si le make_run_all
 
 if __name__ == "__main__":
-    df_train = pd.read_parquet(GCS_RAW_TRAIN)
-    df_val = pd.read_parquet(GCS_RAW_VAL)
-
     preprocess_sentiment(df_train, split='train')
     preprocess_sentiment(df_val, split='val')
     train()
     evaluate()
-
-
-
-    # # TEST
-    # print("\n--- TEST ---")
-    # df_test = pd.read_parquet('../data/raw_data/fintell_test.parquet')
-    # model, tfidf = load_model()
-    # X, y, _ = preprocess_sentiment(df_test, tfidf=tfidf, smot=False, split='test')
-    # accuracy, f1, report = evaluate(X, y, model)
-    # print(f"accuracy: {accuracy:.4f} | f1: {f1:.4f}")
-    # print(report)

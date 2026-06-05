@@ -1,129 +1,125 @@
 import pandas as pd
 import numpy as np
+from datetime import datetime
+from fintell_package.registry import save_word2vec, load_word2vec, save_encoder, load_encoder, save_model_dl, load_model_dl
+from fintell_package.cleaner import clean_data
 from fintell_package.dl_logic.tokenizer import tokenizer
 from fintell_package.dl_logic.embedder import fit_word2vec, transform_embedding
 from fintell_package.dl_logic.encoder import fit_encoder, transform_encoder
 from fintell_package.dl_logic.model_dl import init_model, train_model, evaluate_model
+from fintell_package.data import save_dl_data, load_dl_data
 from fintell_package.params import (
-    RAW_DIR, PREPROCESSED_DIR,
-    MODEL_DIR_DL,
+    PREPROCESSED_DIR_DL,
     GCS_PROJECT_ID, GCS_BUCKET_NAME,
+    GCS_RAW_TRAIN, GCS_RAW_VAL,
+    LOAD_DL_PREPROCESSED,
+    MAXLEN, VECTOR_SIZE,
+    SAMPLE_SIZE,
 )
 
 
-# main_dl.py
-# ├── preprocess_dl(df, split)
-# │   ├── si LOAD_DL_PREPROCESSED=true
-# │   │   └── charge X_pad, y_enc, word2vec, encoder depuis GCS → return
-# │   ├── si LOAD_DL_PREPROCESSED=false
-# │   │   ├── sépare X, y
-# │   │   ├── tokenize X → X_tok
-# │   │   ├── si split='train' → fit_word2vec + save GCS
-# │   │   │   sinon → load word2vec GCS
-# │   │   ├── embed + pad → X_pad + save GCS
-# │   │   ├── si split='train' → fit_encoder + save GCS
-# │   │   │   sinon → load encoder GCS
-# │   │   ├── encode y → y_enc + save GCS
-# │   │   └── return X_pad, y_enc, word2vec, encoder
-# │
-# ├── train()
-# │   ├── charge X_train_pad, y_train_enc depuis GCS
-# │   ├── charge X_val_pad, y_val_enc depuis GCS
-# │   ├── init_model(MAXLEN, VECTOR_SIZE)
-# │   ├── train_model(...)
-# │   └── save model → GCS
-# │
-# ├── evaluate()
-# │   ├── charge X_val_pad, y_val_enc depuis GCS
-# │   ├── load model depuis GCS
-# │   └── evaluate_model(...)
-# │
-# └── __main__
-#     ├── df_train = pd.read_parquet(...)
-#     ├── df_val = pd.read_parquet(...)
-#     ├── preprocess_dl(df_train, 'train')
-#     ├── preprocess_dl(df_val, 'val')
-#     ├── train()
-#     └── evaluate()
+def preprocess_dl(split='train'):
 
-
-def preprocess_sentiment(split):
+    print(f"\n🔄 Preprocessing DL — split: {split}")
 
     if LOAD_DL_PREPROCESSED:
-        local_path = get_latest_preprocessed_from_gcs(
-        GCS_PROJECT_ID, GCS_BUCKET_NAME, split, PREPROCESSED_DIR
-        )
-        df = pd.read_parquet(local_path)
-        X = df['review_text']
-        y = df['review_sentiment_label']
-        print(f"✅ Loaded {len(df)} rows")
+        print(f"📦 Loading cached DL data from GCS...")
+        word2vec = load_word2vec()
+        encoder = load_encoder()
+        X_pad = load_dl_data('X_pad', split, GCS_PROJECT_ID, GCS_BUCKET_NAME, PREPROCESSED_DIR_DL)
+        y_enc = load_dl_data('y_enc', split, GCS_PROJECT_ID, GCS_BUCKET_NAME, PREPROCESSED_DIR_DL)
+        print(f"✅ Cached data loaded — X_pad: {X_pad.shape}, y_enc: {y_enc.shape}")
         return X_pad, y_enc, word2vec, encoder
 
-    else:
+    # 1. Charge le parquet
+    print(f"📥 Loading {split} data from GCS...")
+    df = pd.read_parquet(GCS_RAW_TRAIN if split == 'train' else GCS_RAW_VAL)
+    df = clean_data(df)
+    if SAMPLE_SIZE > 0:
+        df = df.sample(SAMPLE_SIZE, random_state=42)
+    X = df['review_text']
+    y = df['review_sentiment_label']
+    print(f"✅ Loaded {len(df)} rows | classes: {y.value_counts().to_dict()}")
 
-        # 1. Charge le parquet
-        local_path = get_latest_preprocessed_from_gcs(
-        GCS_PROJECT_ID, GCS_BUCKET_NAME, split, PREPROCESSED_DIR
-        )
-        df = pd.read_parquet(local_path)
-        X = df['review_text']
-        y = df['review_sentiment_label']
-        print(f"✅ Loaded {len(df)} rows")
-        return X_pad, y_enc, word2vec, encode
-        # 2. Tokenize
-        X_tok = tokenizer(X)
-        # 3. Word2Vec
-        # 4. Embed + pad
-        # 5. Encoder
-        # 6. Encode y
-        # 7. Save tout → GCS
-        return X_pad, y_enc, word2vec, encoder
 
 
     # 2. Tokenize
-
+    print(f"✂️ Tokenizing...")
+    X_tok = tokenizer(X)
 
     # 3. Word2Vec
     if split == 'train':
+        print(f"🧠 Training Word2Vec...")
         word2vec = fit_word2vec(X_tok)
-        # TODO: save word2vec → GCS
+        save_word2vec(word2vec)
     else:
-        # TODO: load word2vec depuis GCS
-        pass
+        print(f"📦 Loading Word2Vec...")
+        word2vec = load_word2vec()
 
     # 4. Embed + pad
+    print(f"🔢 Embedding + padding (maxlen={MAXLEN})...")
     X_pad = transform_embedding(X_tok, word2vec)
-    # TODO: save X_pad → GCS
+    print(f"✅ X_pad shape: {X_pad.shape}")
+    save_dl_data(X_pad, 'X_pad', split, GCS_PROJECT_ID, GCS_BUCKET_NAME, PREPROCESSED_DIR_DL)
 
     # 5. Encoder
     if split == 'train':
+        print(f"🏷️ Fitting encoder...")
         encoder = fit_encoder(y)
-        # TODO: save encoder → GCS
+        save_encoder(encoder)
     else:
-        # TODO: load encoder depuis GCS
-        pass
+        print(f"📦 Loading encoder...")
+        encoder = load_encoder()
 
     # 6. Encode y
     y_enc = transform_encoder(y, encoder)
-    # TODO: save y_enc → GCS
+    print(f"✅ y_enc shape: {y_enc.shape} | classes: {encoder.classes_}")
+    save_dl_data(y_enc, 'y_enc', split, GCS_PROJECT_ID, GCS_BUCKET_NAME, PREPROCESSED_DIR_DL)
 
+    print(f"✅ Preprocessing done — {split}")
     return X_pad, y_enc, word2vec, encoder
 
 
 def train():
-    # 1. Load data
-    df = pd.read_parquet(...)
-    X, y = df['review_text'], df['review_sentiment_label']
+    print("\n🤖 Training DL model...")
 
-    # 2. Preprocess
-    X_tok = tokenizer(X)
-    word2vec = fit_word2vec(X_tok)
-    X_pad = transform_embedding(X_tok, word2vec)
-    encoder = fit_encoder(y)
-    y_enc = transform_encoder(y, encoder)
+    print("📥 Loading X_pad and y_enc from GCS...")
+    X_train_pad = load_dl_data('X_pad', 'train', GCS_PROJECT_ID, GCS_BUCKET_NAME, PREPROCESSED_DIR_DL)
+    y_train_enc = load_dl_data('y_enc', 'train', GCS_PROJECT_ID, GCS_BUCKET_NAME, PREPROCESSED_DIR_DL)
+    X_val_pad = load_dl_data('X_pad', 'val', GCS_PROJECT_ID, GCS_BUCKET_NAME, PREPROCESSED_DIR_DL)
+    y_val_enc = load_dl_data('y_enc', 'val', GCS_PROJECT_ID, GCS_BUCKET_NAME, PREPROCESSED_DIR_DL)
+    print(f"✅ X_train: {X_train_pad.shape} | X_val: {X_val_pad.shape}")
 
-    # 3. Train
-    model = init_model(maxlen=80, vector_size=60)
-    model = train_model(X_pad, y_enc, model)
+    print("🏗️ Initializing model...")
+    model = init_model(MAXLEN, VECTOR_SIZE)
 
-    return model, word2vec, encoder
+    print("🚀 Training...")
+    model, history = train_model(X_train_pad, y_train_enc, X_val_pad, y_val_enc, model)
+
+    print("💾 Saving model...")
+    save_model_dl(model)
+    print("✅ Training done")
+    return model, history
+
+
+def evaluate():
+    print("\n📊 Evaluating DL model...")
+
+    print("📥 Loading X_val_pad and y_val_enc from GCS...")
+    X_val_pad = load_dl_data('X_pad', 'val', GCS_PROJECT_ID, GCS_BUCKET_NAME, PREPROCESSED_DIR_DL)
+    y_val_enc = load_dl_data('y_enc', 'val', GCS_PROJECT_ID, GCS_BUCKET_NAME, PREPROCESSED_DIR_DL)
+
+    print("📦 Loading model...")
+    model = load_model_dl()
+
+    accuracy, f1, report = evaluate_model(X_val_pad, y_val_enc, model)
+    print(f"✅ accuracy: {accuracy:.4f} | f1: {f1:.4f}")
+    print(report)
+
+    return accuracy, f1, report
+
+if __name__ == "__main__":
+    preprocess_dl('train')
+    preprocess_dl('val')
+    train()
+    evaluate()

@@ -1,3 +1,6 @@
+#GENERAL
+
+#ML
 fastparquet==2026.5.0
 pandas==2.3.3
 scikit-learn==1.7.2
@@ -8,6 +11,13 @@ nltk==3.9.4
 arrow==1.4.0
 pyarrow==24.0.0
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+xgboost==3.2.0
+
+#DL
+gensim==4.4.0
+tensorflow==2.21.0
+
+
 
 
 #GCP

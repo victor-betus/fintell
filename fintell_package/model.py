@@ -4,7 +4,6 @@ from sklearn.metrics import f1_score, accuracy_score, classification_report
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
-from xgboost import XGBClassifier
 
 def train_model(X_train, y_train, model_name=None):
 
@@ -20,8 +19,8 @@ def train_model(X_train, y_train, model_name=None):
     elif model_name == 'naive_bayes':
         model = MultinomialNB(alpha=0.01)
 
-    elif model_name == 'xgboost':
-        model = XGBClassifier(n_estimators=200, max_depth=6, learning_rate=0.1, subsample=0.8, eval_metric='mlogloss', random_state=42)
+    # elif model_name == 'xgboost':
+    #     model = XGBClassifier(n_estimators=200, max_depth=6, learning_rate=0.1, subsample=0.8, eval_metric='mlogloss', random_state=42)
 
     else:
         model = LogisticRegression(max_iter=500)

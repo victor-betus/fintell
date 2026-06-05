@@ -17,35 +17,23 @@ def basic_cleaning(sentence):
 
     return sentence
 
-    # Removing smileys ? 
+    # Removing smileys ?
 
     # $CHALLENGIFY_END
 
-def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Clean raw data by
-    - keeping reviews > 10 words
-    - keeping reviews with labels positive, negative, neutral
-    - keeping reviews with topics
-    - adding colomns
-    - removing useless colomns
-    - cleaning whitespaces
-    - lowercasing
-    - removing numbers
-    - removing puncuation
-    """
+def clean_data(df: pd.DataFrame, inference=False) -> pd.DataFrame:
+
+    if not inference:
+        df = df[df['review_sentiment_label'].isin(['positive', 'negative', 'neutral'])].copy()
+        df = df[df['topic_label_ALL'] != 'Undefined'].copy()
 
     # Count words and keep only reviews > 10 words
     df['word_count'] = df['review_text'].str.split().str.len()
     df = df[df['word_count'] > 10].copy()
 
-    # Keep only reviews with sentiments & topics labels
-    df = df[df['review_sentiment_label'].isin(['positive', 'negative', 'neutral'])].copy()
-    df = df[df['topic_label_ALL'] != 'Undefined'].copy()
-
-
-    # Remove useless colomns
-    df = df[['review_text', 'topic_label_ALL', 'review_sentiment_label']]
+    if not inference:
+        # Remove useless columns
+        df = df[['review_text', 'topic_label_ALL', 'review_sentiment_label']]
 
     # Basic cleaning
     df['review_text'] = df.review_text.apply(basic_cleaning)

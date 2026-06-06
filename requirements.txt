@@ -30,3 +30,6 @@ db-dtypes==1.6.0
 fastapi==0.108.0
 pytz
 uvicorn
+gensim==4.4.0
+keras==3.12.2
+tensorflow==2.21.0

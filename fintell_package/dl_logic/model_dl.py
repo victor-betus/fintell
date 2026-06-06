@@ -1,9 +1,31 @@
 from tensorflow.keras import Sequential
 from tensorflow.keras import layers
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, Callback
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, f1_score, classification_report
-from fintell_package.params import MODEL_DIR_DL, MODEL_DIR_DL_PLOTS
+from fintell_package.params import MODEL_DIR_DL, MODEL_DIR_DL_PLOTS, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET
+from fintell_package.run_context import RUN_TIMESTAMP
+from fintell_package.data import upload_file_to_bucket
+
+
+class GCSCheckpoint(Callback):
+    def __init__(self, local_path):
+        super().__init__()
+        self.local_path = local_path
+        self.best_val_accuracy = 0
+
+    def on_epoch_end(self, epoch, logs=None):
+        val_acc = logs.get('val_accuracy', 0)
+        if val_acc > self.best_val_accuracy:
+            self.best_val_accuracy = val_acc
+            self.model.save(str(self.local_path))
+            if MODEL_TARGET == "gcs":
+                upload_file_to_bucket(
+                    GCS_PROJECT_ID, GCS_BUCKET_NAME,
+                    str(self.local_path),
+                    f"dl_checkpoints/best_model_{RUN_TIMESTAMP}.keras"
+                )
+                print(f"✅ Best model uploaded to GCS (val_acc: {val_acc:.4f})")
 
 
 def init_model(maxlen, vector_size):
@@ -11,16 +33,16 @@ def init_model(maxlen, vector_size):
     model.add(layers.Masking(input_shape=(maxlen, vector_size)))
     model.add(layers.LSTM(20, activation='tanh'))
     model.add(layers.Dense(15, activation='relu'))
-    model.add(layers.Dense(3, activation='softmax'))  # 3 classes, pas 1
+    model.add(layers.Dense(3, activation='softmax'))
 
-    model.compile(loss='sparse_categorical_crossentropy',  # pas binary_crossentropy
+    model.compile(loss='sparse_categorical_crossentropy',
                   optimizer='rmsprop',
                   metrics=['accuracy'])
 
     return model
 
+
 def plot_history(history):
-    from fintell_package.run_context import RUN_TIMESTAMP
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 4))
     ax1.plot(history.history['loss'])
     ax1.plot(history.history['val_loss'])
@@ -40,17 +62,19 @@ def plot_history(history):
     print(f"Final accuracy: {history.history['accuracy'][-1]:.4f} | val_accuracy: {history.history['val_accuracy'][-1]:.4f}")
     return plot_path
 
+
 def train_model(X_train, y_train, X_val, y_val, model):
     print(model.summary())
 
+    checkpoint_path = MODEL_DIR_DL / 'fintell_lstm_w2v.keras'
     es = EarlyStopping(patience=5, restore_best_weights=True)
-    mc = ModelCheckpoint(MODEL_DIR_DL / 'fintell_lstm_w2v.keras', save_best_only=True, monitor='val_accuracy')
+    gcs_ckpt = GCSCheckpoint(checkpoint_path)
 
     history = model.fit(X_train, y_train,
           batch_size=32,
           epochs=100,
           validation_data=(X_val, y_val),
-          callbacks=[es, mc]
+          callbacks=[es, gcs_ckpt]
          )
 
     plot_path = plot_history(history)

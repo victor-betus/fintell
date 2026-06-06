@@ -1,10 +1,12 @@
+import json
 import joblib
 from pathlib import Path
 from datetime import datetime
 from gensim.models import Word2Vec
 from google.cloud import storage
+from fintell_package.run_context import RUN_TIMESTAMP
 from fintell_package.data import upload_file_to_bucket, download_file_from_bucket, get_latest_dl_data_from_gcs
-from fintell_package.params import MODEL_DIR, MODEL_DIR_DL, MODEL_NAME, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET
+from fintell_package.params import MODEL_DIR, MODEL_DIR_DL, MODEL_DIR_DL_RUNS, MODEL_NAME, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET
 
 def save_model(model, tfidf, model_name=MODEL_NAME):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -60,8 +62,7 @@ def load_model(model_name=MODEL_NAME):
 
 def save_word2vec(word2vec):
     """Save Word2Vec model locally and upload to GCS."""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"word2vec_{timestamp}.model"
+    filename = f"word2vec_{RUN_TIMESTAMP}.model"
     local_path = MODEL_DIR_DL / filename
     word2vec.save(str(local_path))
     print(f"✅ Word2Vec saved locally: {filename}")
@@ -83,8 +84,7 @@ def load_word2vec():
 
 def save_encoder(encoder):
     """Save LabelEncoder locally and upload to GCS."""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"encoder_{timestamp}.pkl"
+    filename = f"encoder_{RUN_TIMESTAMP}.pkl"
     local_path = MODEL_DIR_DL / filename
     joblib.dump(encoder, local_path)
     print(f"✅ Encoder saved locally: {filename}")
@@ -105,8 +105,7 @@ def load_encoder():
 
 def save_model_dl(model):
     """Save Keras LSTM model locally and upload to GCS."""
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"model_dl_{timestamp}.keras"
+    filename = f"model_dl_{RUN_TIMESTAMP}.keras"
     local_path = MODEL_DIR_DL / filename
     model.save(str(local_path))
     print(f"✅ DL Model saved locally: {filename}")
@@ -125,3 +124,29 @@ def load_model_dl():
     model = load_model(str(local_path))
     print(f"📦 DL Model loaded: {local_path.name}")
     return model
+
+def save_plot(plot_path):
+    """Upload training history plot to GCS."""
+    if MODEL_TARGET == "gcs":
+        filename = f"training_history_{RUN_TIMESTAMP}.png"
+        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(plot_path), f"dl_plots/{filename}")
+        print(f"✅ Plot uploaded to GCS: dl_plots/{filename}")
+
+def save_run_metadata(accuracy, f1, report, params: dict):
+    """Save a JSON run card to GCS with model info and metrics."""
+    metadata = {
+        "timestamp": RUN_TIMESTAMP,
+        "params": params,
+        "metrics": {
+            "accuracy": round(accuracy, 4),
+            "f1_macro": round(f1, 4),
+            "classification_report": report
+        }
+    }
+    filename = f"run_{RUN_TIMESTAMP}.json"
+    local_path = MODEL_DIR_DL_RUNS / filename
+    with open(local_path, 'w') as f:
+        json.dump(metadata, f, indent=2)
+    if MODEL_TARGET == "gcs":
+        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(local_path), f"dl_runs/{filename}")
+        print(f"✅ Run metadata uploaded to GCS: dl_runs/{filename}")

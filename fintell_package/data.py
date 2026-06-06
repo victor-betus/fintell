@@ -1,6 +1,7 @@
 from pathlib import Path
 from google.cloud import storage
 from datetime import datetime
+from fintell_package.run_context import RUN_TIMESTAMP
 
 from fintell_package.params import (
     MODEL_NAME,
@@ -164,8 +165,7 @@ def save_dl_data(array, name, split, project_id, bucket_name, destination_dir):
     name: 'X_pad' or 'y_enc', split: 'train' or 'val'
     """
     import numpy as np
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{name}_{split}_{timestamp}.npy"
+    filename = f"{name}_{split}_{RUN_TIMESTAMP}.npy"
     local_path = Path(destination_dir) / filename
     np.save(str(local_path), array)
     print(f"✅ {name} saved locally: {filename}")

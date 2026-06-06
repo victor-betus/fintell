@@ -16,16 +16,8 @@ def upload_preprocessed_file_to_bucket(
     local_file: str,
     split: str
 ) -> None:
-    """
-    Upload a preprocessed ML parquet file to GCS with a timestamped filename.
-    split: 'train' or 'val'
-    destination: 'processed_data/{split}_reviews_{timestamp}_lemma-X_stop-X_smote-X.parquet'
-    """
-
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-
     print("💾 Saving preprocessed data...")
-
     filename = (
         f"{split}_reviews_{timestamp}"
         f"_lemma-{'T' if PREPROCESS_LEMMATIZE else 'F'}"
@@ -33,17 +25,12 @@ def upload_preprocessed_file_to_bucket(
         f"_smote-{'T' if PREPROCESS_SMOTE else 'F'}"
         ".parquet"
     )
-
     destination_path = f"processed_data/{filename}"
-
     client = storage.Client(project=project_id)
     bucket = client.bucket(bucket_name)
-
     blob = bucket.blob(destination_path)
     blob.upload_from_filename(local_file)
-
     file_size_mb = Path(local_file).stat().st_size / (1024 * 1024)
-
     print("✅ Upload terminé")
     print(f"📄 Fichier : {Path(local_file).name}")
     print(f"📦 Taille : {file_size_mb:.2f} MB")
@@ -56,21 +43,12 @@ def upload_file_to_bucket(
     local_file: str,
     destination_path: str
 ) -> None:
-    """
-    Upload any local file to a GCS bucket at a given destination path.
-    Generic utility used by other upload functions.
-    """
-
     client = storage.Client(project=project_id)
     bucket = client.bucket(bucket_name)
-
     local_path = Path(local_file)
-
     blob = bucket.blob(destination_path)
     blob.upload_from_filename(str(local_path))
-
     file_size_mb = local_path.stat().st_size / (1024 * 1024)
-
     print("✅ Upload terminé")
     print(f"📄 Fichier : {local_path.name}")
     print(f"📦 Taille : {file_size_mb:.2f} MB")
@@ -83,26 +61,13 @@ def download_file_from_bucket(
     source_path: str,
     destination_path: str
 ) -> None:
-    """
-    Download a file from GCS to a local destination path.
-    Creates parent directories if they don't exist.
-    Generic utility used by other download functions.
-    """
-
     client = storage.Client(project=project_id)
     bucket = client.bucket(bucket_name)
-
     destination = Path(destination_path)
-    destination.parent.mkdir(
-        parents=True,
-        exist_ok=True
-    )
-
+    destination.parent.mkdir(parents=True, exist_ok=True)
     blob = bucket.blob(source_path)
     blob.download_to_filename(str(destination))
-
     file_size_mb = destination.stat().st_size / (1024 * 1024)
-
     print("✅ Download terminé")
     print(f"📄 Fichier : {destination.name}")
     print(f"📦 Taille : {file_size_mb:.2f} MB")
@@ -110,60 +75,36 @@ def download_file_from_bucket(
 
 
 def get_latest_preprocessed_from_gcs(project_id, bucket_name, split, destination_dir):
-    """
-    Download the latest ML preprocessed parquet file from GCS for a given split.
-    split: 'train' or 'val'
-    prefix: 'processed_data/{split}_reviews_'
-    Returns the local path of the downloaded file.
-    """
     client = storage.Client(project=project_id)
     bucket = client.bucket(bucket_name)
-
     blobs = sorted(
         [b for b in bucket.list_blobs(prefix=f"processed_data/{split}_reviews_")],
-        key=lambda b: b.name
+        key=lambda b: b.time_created
     )
-
     if not blobs:
         raise FileNotFoundError(f"No preprocessed file found in GCS for split='{split}'")
-
     latest = blobs[-1]
     local_path = Path(destination_dir) / Path(latest.name).name
-
     download_file_from_bucket(project_id, bucket_name, latest.name, str(local_path))
-
     return local_path
 
 
 def get_latest_dl_data_from_gcs(project_id, bucket_name, prefix, destination_dir):
-    """
-    Download the latest DL preprocessed file (word2vec, encoder, X_pad, y_enc) from GCS.
-    prefix example: 'dl_data/word2vec_' or 'dl_data/encoder_'
-    Returns the local path of the downloaded file.
-    """
     client = storage.Client(project=project_id)
     bucket = client.bucket(bucket_name)
-
     blobs = sorted(
         [b for b in bucket.list_blobs(prefix=prefix)],
-        key=lambda b: b.name
+        key=lambda b: b.time_created
     )
-
     if not blobs:
         raise FileNotFoundError(f"No DL data found in GCS for prefix='{prefix}'")
-
     latest = blobs[-1]
     local_path = Path(destination_dir) / Path(latest.name).name
-
     download_file_from_bucket(project_id, bucket_name, latest.name, str(local_path))
-
     return local_path
 
+
 def save_dl_data(array, name, split, project_id, bucket_name, destination_dir):
-    """
-    Save numpy array (X_pad or y_enc) locally and upload to GCS.
-    name: 'X_pad' or 'y_enc', split: 'train' or 'val'
-    """
     import numpy as np
     filename = f"{name}_{split}_{RUN_TIMESTAMP}.npy"
     local_path = Path(destination_dir) / filename
@@ -174,10 +115,6 @@ def save_dl_data(array, name, split, project_id, bucket_name, destination_dir):
 
 
 def load_dl_data(name, split, project_id, bucket_name, destination_dir):
-    """
-    Load the latest numpy array (X_pad or y_enc) from GCS.
-    name: 'X_pad' or 'y_enc', split: 'train' or 'val'
-    """
     import numpy as np
     local_path = get_latest_dl_data_from_gcs(project_id, bucket_name, f"dl_data/{name}_{split}_", destination_dir)
     return np.load(str(local_path))

@@ -20,6 +20,7 @@ def init_model(maxlen, vector_size):
     return model
 
 def plot_history(history):
+    from fintell_package.run_context import RUN_TIMESTAMP
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 4))
     ax1.plot(history.history['loss'])
     ax1.plot(history.history['val_loss'])
@@ -33,12 +34,13 @@ def plot_history(history):
     ax2.set_ylabel('Accuracy')
     ax2.set_xlabel('Epoch')
     ax2.legend(['Train', 'Val'], loc='upper left')
-    plt.savefig(MODEL_DIR_DL_PLOTS / 'training_history.png')
+    plot_path = MODEL_DIR_DL_PLOTS / f'training_history_{RUN_TIMESTAMP}.png'
+    plt.savefig(plot_path)
     print(f"Final loss: {history.history['loss'][-1]:.4f} | val_loss: {history.history['val_loss'][-1]:.4f}")
     print(f"Final accuracy: {history.history['accuracy'][-1]:.4f} | val_accuracy: {history.history['val_accuracy'][-1]:.4f}")
+    return plot_path
 
 def train_model(X_train, y_train, X_val, y_val, model):
-
     print(model.summary())
 
     es = EarlyStopping(patience=5, restore_best_weights=True)
@@ -47,13 +49,13 @@ def train_model(X_train, y_train, X_val, y_val, model):
     history = model.fit(X_train, y_train,
           batch_size=32,
           epochs=100,
-          validation_data=(X_val, y_val),  # ton vrai val set
+          validation_data=(X_val, y_val),
           callbacks=[es, mc]
          )
 
-    plot_history(history)
+    plot_path = plot_history(history)
 
-    return model, history
+    return model, history, plot_path
 
 
 def evaluate_model(X, y, model):

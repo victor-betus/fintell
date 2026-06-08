@@ -16,7 +16,9 @@ from fintell_package.params import (
     SAMPLE_SIZE,
     PREPROCESS_LEMMATIZE,
     PREPROCESS_STOPWORDS,
-    MODEL_DL_NAME
+    MODEL_DL_NAME,
+    USE_CLASS_WEIGHT,
+    EMBEDDER_NAME
 )
 
 
@@ -117,6 +119,8 @@ def evaluate():
         "lemmatize": PREPROCESS_LEMMATIZE,
         "stopwords": PREPROCESS_STOPWORDS,
         "model_dl_name": MODEL_DL_NAME,
+        "use_class_weight": USE_CLASS_WEIGHT,
+        "embedder_name": EMBEDDER_NAME,
     })
 
 

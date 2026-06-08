@@ -3,10 +3,11 @@ from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping, Callback
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, f1_score, classification_report
-from fintell_package.params import MODEL_DIR_DL, MODEL_DIR_DL_PLOTS, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET, MODEL_DL_NAME
+from fintell_package.params import MODEL_DIR_DL, MODEL_DIR_DL_PLOTS, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET, MODEL_DL_NAME, USE_CLASS_WEIGHT, EMBEDDER_NAME
 from fintell_package.run_context import RUN_TIMESTAMP
 from fintell_package.data import upload_file_to_bucket
-
+import numpy as np
+from sklearn.utils.class_weight import compute_class_weight
 
 class GCSCheckpoint(Callback):
     def __init__(self, local_path):
@@ -114,16 +115,23 @@ def plot_history(history):
 def train_model(X_train, y_train, X_val, y_val, model):
     print(model.summary())
 
-    checkpoint_path = MODEL_DIR_DL / f'fintell_{MODEL_DL_NAME}_w2v.keras'
+    checkpoint_path = MODEL_DIR_DL / f'fintell_{MODEL_DL_NAME}_{EMBEDDER_NAME}.keras'
+    if USE_CLASS_WEIGHT:
+        weights = compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
+        cw = dict(enumerate(weights))
+    else:
+        cw = None
+
     es = EarlyStopping(patience=5, restore_best_weights=True)
     gcs_ckpt = GCSCheckpoint(checkpoint_path)
 
     history = model.fit(X_train, y_train,
-          batch_size=32,
-          epochs=100,
-          validation_data=(X_val, y_val),
-          callbacks=[es, gcs_ckpt]
-         )
+        batch_size=64,
+        epochs=100,
+        validation_data=(X_val, y_val),
+        callbacks=[es, gcs_ckpt],
+        class_weight=cw
+     )
 
     plot_path = plot_history(history)
 

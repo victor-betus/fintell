@@ -130,7 +130,8 @@ def train_model(X_train, y_train, X_val, y_val, model):
         epochs=100,
         validation_data=(X_val, y_val),
         callbacks=[es, gcs_ckpt],
-        class_weight=cw
+        class_weight=cw,
+        verbose=2
      )
 
     plot_path = plot_history(history)

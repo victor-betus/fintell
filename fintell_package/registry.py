@@ -12,6 +12,7 @@ from fintell_package.params import (
     MODEL_DIR_TOPIC_DL, MODEL_DIR_TOPIC_DL_RUNS,
     MODEL_NAME, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET,
     GCS_PREFIX_DL_DATA, GCS_PREFIX_DL_MODELS, GCS_PREFIX_DL_PLOTS, GCS_PREFIX_DL_RUNS,
+    GCS_PREFIX_TOPIC_DL_DATA,
 )
 
 def save_model(model, tfidf, model_name=MODEL_NAME):
@@ -150,6 +151,30 @@ def save_plot(plot_path, model_name=None, gcs_prefix=GCS_PREFIX_DL_PLOTS):
         filename = f"training_history_{model_name}_{RUN_TIMESTAMP}.png"
         upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(plot_path), f"{gcs_prefix}/{filename}")
         print(f"✅ Plot uploaded to GCS: {gcs_prefix}/{filename}")
+
+
+def save_vocab(vocab, local_dir=None, gcs_prefix=GCS_PREFIX_TOPIC_DL_DATA):
+    if local_dir is None:
+        local_dir = MODEL_DIR_TOPIC_DL
+    filename = f"vocab_{RUN_TIMESTAMP}.pkl"
+    local_path = local_dir / filename
+    joblib.dump(vocab, local_path)
+    print(f"✅ Vocab saved locally: {filename}")
+    if MODEL_TARGET == "gcs":
+        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(local_path), f"{gcs_prefix}/{filename}")
+        print(f"✅ Vocab uploaded to GCS: {gcs_prefix}/{filename}")
+
+
+def load_vocab(local_dir=None, gcs_prefix=GCS_PREFIX_TOPIC_DL_DATA):
+    if local_dir is None:
+        local_dir = MODEL_DIR_TOPIC_DL
+    if MODEL_TARGET == "gcs":
+        local_path = get_latest_dl_data_from_gcs(GCS_PROJECT_ID, GCS_BUCKET_NAME, f"{gcs_prefix}/vocab_", local_dir)
+    else:
+        local_path = sorted(local_dir.glob("vocab_*.pkl"))[-1]
+    vocab = joblib.load(local_path)
+    print(f"📦 Vocab loaded: {local_path.name}")
+    return vocab
 
 
 def save_run_metadata(accuracy, f1, report, params: dict, model_name=None, local_dir=None, gcs_prefix=GCS_PREFIX_DL_RUNS):

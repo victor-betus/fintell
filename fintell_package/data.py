@@ -2,6 +2,7 @@ from pathlib import Path
 from google.cloud import storage
 from datetime import datetime
 from fintell_package.run_context import RUN_TIMESTAMP
+from fintell_package.gcs_loader import upload_file_to_bucket  # re-exporté depuis gcs_loader
 
 from fintell_package.params import (
     MODEL_NAME,
@@ -37,24 +38,6 @@ def upload_preprocessed_file_to_bucket(
     print(f"📍 Stocké dans : gs://{bucket_name}/{destination_path}")
 
 
-def upload_file_to_bucket(
-    project_id: str,
-    bucket_name: str,
-    local_file: str,
-    destination_path: str
-) -> None:
-    client = storage.Client(project=project_id)
-    bucket = client.bucket(bucket_name)
-    local_path = Path(local_file)
-    blob = bucket.blob(destination_path)
-    blob.upload_from_filename(str(local_path))
-    file_size_mb = local_path.stat().st_size / (1024 * 1024)
-    print("✅ Upload terminé")
-    print(f"📄 Fichier : {local_path.name}")
-    print(f"📦 Taille : {file_size_mb:.2f} MB")
-    print(f"📍 Stocké dans : gs://{bucket_name}/{destination_path}")
-
-
 def download_file_from_bucket(
     project_id: str,
     bucket_name: str,
@@ -74,21 +57,6 @@ def download_file_from_bucket(
     print(f"📍 Stocké dans : {destination}")
 
 
-def get_latest_preprocessed_from_gcs(project_id, bucket_name, split, destination_dir):
-    client = storage.Client(project=project_id)
-    bucket = client.bucket(bucket_name)
-    blobs = sorted(
-        [b for b in bucket.list_blobs(prefix=f"processed_data/{split}_reviews_")],
-        key=lambda b: b.time_created
-    )
-    if not blobs:
-        raise FileNotFoundError(f"No preprocessed file found in GCS for split='{split}'")
-    latest = blobs[-1]
-    local_path = Path(destination_dir) / Path(latest.name).name
-    download_file_from_bucket(project_id, bucket_name, latest.name, str(local_path))
-    return local_path
-
-
 def get_latest_dl_data_from_gcs(project_id, bucket_name, prefix, destination_dir):
     client = storage.Client(project=project_id)
     bucket = client.bucket(bucket_name)
@@ -97,11 +65,20 @@ def get_latest_dl_data_from_gcs(project_id, bucket_name, prefix, destination_dir
         key=lambda b: b.time_created
     )
     if not blobs:
-        raise FileNotFoundError(f"No DL data found in GCS for prefix='{prefix}'")
+        raise FileNotFoundError(f"No file found in GCS for prefix='{prefix}'")
     latest = blobs[-1]
     local_path = Path(destination_dir) / Path(latest.name).name
     download_file_from_bucket(project_id, bucket_name, latest.name, str(local_path))
     return local_path
+
+
+def get_latest_preprocessed_from_gcs(project_id, bucket_name, split, destination_dir):
+    # wrapper conservé pour ne pas casser ml_logic/main_sentiment.py
+    return get_latest_dl_data_from_gcs(
+        project_id, bucket_name,
+        f"processed_data/{split}_reviews_",
+        destination_dir
+    )
 
 
 def save_dl_data(array, name, split, project_id, bucket_name, destination_dir, gcs_prefix="dl_data"):

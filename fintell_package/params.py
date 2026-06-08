@@ -38,6 +38,7 @@ GCS_RAW_VAL   = f"gs://{GCS_BUCKET_NAME}/data/raw_data/fintell_val.parquet"
 #FLAGS MODELS
 MODEL_NAME = os.getenv("MODEL_NAME", "svc")
 MODEL_DL_NAME = os.getenv("MODEL_DL_NAME", "lstm")
+EMBEDDER_NAME = os.getenv("EMBEDDER_NAME", "word2vec")
 
 # DL HYPERPARAMS
 MAXLEN      = int(os.getenv("MAXLEN", "80"))

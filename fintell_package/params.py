@@ -72,3 +72,8 @@ USE_CLASS_WEIGHT = os.getenv("USE_CLASS_WEIGHT", "false").lower() == "true"
 # DEV
 # SAMPLE_SIZE: 0 = full dataset | n = nombre de lignes
 SAMPLE_SIZE = int(os.getenv("SAMPLE_SIZE", "0"))
+
+# PRODUCTION — chemins GCS fixes vers les artefacts déployés
+GCS_PROD_SENTIMENT_MODEL     = os.getenv("GCS_PROD_SENTIMENT_MODEL",     "production/sentiments/bigru.keras")
+GCS_PROD_SENTIMENT_ENCODER   = os.getenv("GCS_PROD_SENTIMENT_ENCODER",   "production/sentiments/label_encoder.pkl")
+GCS_PROD_SENTIMENT_TOKENIZER = os.getenv("GCS_PROD_SENTIMENT_TOKENIZER", "production/sentiments/tokenizer.pkl")

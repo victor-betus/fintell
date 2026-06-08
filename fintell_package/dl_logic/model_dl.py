@@ -3,7 +3,7 @@ from tensorflow.keras import layers
 from tensorflow.keras.callbacks import EarlyStopping, Callback
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score, f1_score, classification_report
-from fintell_package.params import MODEL_DIR_DL, MODEL_DIR_DL_PLOTS, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET
+from fintell_package.params import MODEL_DIR_DL, MODEL_DIR_DL_PLOTS, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET, MODEL_DL_NAME
 from fintell_package.run_context import RUN_TIMESTAMP
 from fintell_package.data import upload_file_to_bucket
 
@@ -28,17 +28,65 @@ class GCSCheckpoint(Callback):
                 print(f"✅ Best model uploaded to GCS (val_acc: {val_acc:.4f})")
 
 
-def init_model(maxlen, vector_size):
-    model = Sequential()
-    model.add(layers.Masking(input_shape=(maxlen, vector_size)))
-    model.add(layers.LSTM(20, activation='tanh'))
-    model.add(layers.Dense(15, activation='relu'))
-    model.add(layers.Dense(3, activation='softmax'))
+def init_model(maxlen, vector_size, model_dl_name=MODEL_DL_NAME):
 
-    model.compile(loss='sparse_categorical_crossentropy',
-                  optimizer='rmsprop',
-                  metrics=['accuracy'])
+    if model_dl_name == 'lstm':
+        model = Sequential()
+        model.add(layers.Masking(input_shape=(maxlen, vector_size)))
+        model.add(layers.LSTM(20, activation='tanh'))
+        model.add(layers.Dense(15, activation='relu'))
+        model.add(layers.Dense(3, activation='softmax'))
 
+        model.compile(loss='sparse_categorical_crossentropy',
+                    optimizer='rmsprop',
+                    metrics=['accuracy'])
+
+    elif model_dl_name == 'gru':
+        model = Sequential()
+        model.add(layers.Masking(input_shape=(maxlen, vector_size)))
+        model.add(layers.GRU(20, activation='tanh'))
+        model.add(layers.Dense(15, activation='relu'))
+        model.add(layers.Dense(3, activation='softmax'))
+
+        model.compile(loss='sparse_categorical_crossentropy',
+                    optimizer='rmsprop',
+                    metrics=['accuracy'])
+
+
+    elif model_dl_name == 'bigru':
+        from tensorflow.keras.regularizers import l2
+        from tensorflow.keras.optimizers import Adam
+
+        model = Sequential()
+        model.add(layers.Masking(input_shape=(maxlen, vector_size)))
+        model.add(layers.Bidirectional(layers.GRU(128, dropout=0.2)))
+        model.add(layers.Dense(128, activation='relu', kernel_regularizer=l2(0.001)))
+        model.add(layers.Dropout(0.4))
+        model.add(layers.Dense(64, activation='relu', kernel_regularizer=l2(0.001)))
+        model.add(layers.Dropout(0.3))
+        model.add(layers.Dense(32, activation='relu'))
+        model.add(layers.Dropout(0.2))
+        model.add(layers.Dense(3, activation='softmax'))
+
+        model.compile(
+            optimizer=Adam(learning_rate=0.0005),
+            loss='sparse_categorical_crossentropy',
+            metrics=['accuracy']
+        )
+
+    elif model_dl_name == 'bilstm':
+        model = Sequential()
+        model.add(layers.Masking(input_shape=(maxlen, vector_size)))
+        model.add(layers.Bidirectional(layers.LSTM(20, activation='tanh')))
+        model.add(layers.Dense(15, activation='relu'))
+        model.add(layers.Dense(3, activation='softmax'))
+
+        model.compile(loss='sparse_categorical_crossentropy',
+                    optimizer='rmsprop',
+                    metrics=['accuracy'])
+
+    else:
+        raise ValueError(f"Unknown model_dl_name: '{model_dl_name}'. Choose from: lstm, gru, bilstm")
     return model
 
 
@@ -66,7 +114,7 @@ def plot_history(history):
 def train_model(X_train, y_train, X_val, y_val, model):
     print(model.summary())
 
-    checkpoint_path = MODEL_DIR_DL / 'fintell_lstm_w2v.keras'
+    checkpoint_path = MODEL_DIR_DL / f'fintell_{MODEL_DL_NAME}_w2v.keras'
     es = EarlyStopping(patience=5, restore_best_weights=True)
     gcs_ckpt = GCSCheckpoint(checkpoint_path)
 

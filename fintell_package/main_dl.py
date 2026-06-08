@@ -16,6 +16,7 @@ from fintell_package.params import (
     SAMPLE_SIZE,
     PREPROCESS_LEMMATIZE,
     PREPROCESS_STOPWORDS,
+    MODEL_DL_NAME
 )
 
 
@@ -84,7 +85,7 @@ def train():
     print(f"✅ X_train: {X_train_pad.shape} | X_val: {X_val_pad.shape}")
 
     print("🏗️ Initializing model...")
-    model = init_model(MAXLEN, VECTOR_SIZE)
+    model = init_model(MAXLEN, VECTOR_SIZE, MODEL_DL_NAME)
 
     print("🚀 Training...")
     model, history, plot_path = train_model(X_train_pad, y_train_enc, X_val_pad, y_val_enc, model)
@@ -115,6 +116,7 @@ def evaluate():
         "sample_size": SAMPLE_SIZE,
         "lemmatize": PREPROCESS_LEMMATIZE,
         "stopwords": PREPROCESS_STOPWORDS,
+        "model_dl_name": MODEL_DL_NAME,
     })
 
 

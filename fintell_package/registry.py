@@ -6,7 +6,7 @@ from gensim.models import Word2Vec
 from google.cloud import storage
 from fintell_package.run_context import RUN_TIMESTAMP
 from fintell_package.data import upload_file_to_bucket, download_file_from_bucket, get_latest_dl_data_from_gcs
-from fintell_package.params import MODEL_DIR, MODEL_DIR_DL, MODEL_DIR_DL_RUNS, MODEL_NAME, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET
+from fintell_package.params import MODEL_DL_NAME, MODEL_DIR, MODEL_DIR_DL, MODEL_DIR_DL_RUNS, MODEL_NAME, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET
 
 def save_model(model, tfidf, model_name=MODEL_NAME):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -105,7 +105,7 @@ def load_encoder():
 
 def save_model_dl(model):
     """Save Keras LSTM model locally and upload to GCS."""
-    filename = f"model_dl_{RUN_TIMESTAMP}.keras"
+    filename = f"model_dl_{MODEL_DL_NAME}_{RUN_TIMESTAMP}.keras"
     local_path = MODEL_DIR_DL / filename
     model.save(str(local_path))
     print(f"✅ DL Model saved locally: {filename}")
@@ -117,9 +117,9 @@ def save_model_dl(model):
 def load_model_dl():
     """Load the latest Keras LSTM model from GCS or local."""
     if MODEL_TARGET == "gcs":
-        local_path = get_latest_dl_data_from_gcs(GCS_PROJECT_ID, GCS_BUCKET_NAME, "dl_models/model_dl_", MODEL_DIR_DL)
+        local_path = get_latest_dl_data_from_gcs(GCS_PROJECT_ID, GCS_BUCKET_NAME, f"dl_models/model_dl_{MODEL_DL_NAME}_", MODEL_DIR_DL)
     else:
-        local_path = sorted(MODEL_DIR_DL.glob("model_dl_*.keras"))[-1]
+        local_path = sorted(MODEL_DIR_DL.glob(f"model_dl_{MODEL_DL_NAME}_*.keras"))[-1]
     from tensorflow.keras.models import load_model
     model = load_model(str(local_path))
     print(f"📦 DL Model loaded: {local_path.name}")
@@ -128,7 +128,7 @@ def load_model_dl():
 def save_plot(plot_path):
     """Upload training history plot to GCS."""
     if MODEL_TARGET == "gcs":
-        filename = f"training_history_{RUN_TIMESTAMP}.png"
+        filename = f"training_history_{MODEL_DL_NAME}_{RUN_TIMESTAMP}.png"
         upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(plot_path), f"dl_plots/{filename}")
         print(f"✅ Plot uploaded to GCS: dl_plots/{filename}")
 
@@ -143,7 +143,7 @@ def save_run_metadata(accuracy, f1, report, params: dict):
             "classification_report": report
         }
     }
-    filename = f"run_{RUN_TIMESTAMP}.json"
+    filename = f"run_{MODEL_DL_NAME}_{RUN_TIMESTAMP}.json"
     local_path = MODEL_DIR_DL_RUNS / filename
     with open(local_path, 'w') as f:
         json.dump(metadata, f, indent=2)

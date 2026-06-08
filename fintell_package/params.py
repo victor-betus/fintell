@@ -5,14 +5,20 @@ from pathlib import Path
 ROOT_DIR            = Path(__file__).resolve().parent.parent
 RAW_DIR             = ROOT_DIR / "data" / "raw_data"
 PREPROCESSED_DIR    = ROOT_DIR / "data" / "preprocessed_data"
-PREPROCESSED_DIR_DL = ROOT_DIR / "data" / "preprocessed_data_dl"
-MODEL_DIR           = ROOT_DIR / "models"
-MODEL_DIR_ML        = MODEL_DIR / "ml"
-MODEL_DIR_DL        = MODEL_DIR / "dl"
-MODEL_DIR_DL_PLOTS = MODEL_DIR_DL / "plots"
-MODEL_DIR_DL_RUNS  = MODEL_DIR_DL / "runs"
+PREPROCESSED_DIR_DL       = ROOT_DIR / "data" / "preprocessed_data_dl"
+PREPROCESSED_DIR_TOPIC_DL = ROOT_DIR / "data" / "preprocessed_data_topic_dl"
+MODEL_DIR                 = ROOT_DIR / "models"
+MODEL_DIR_ML              = MODEL_DIR / "ml"
+MODEL_DIR_DL              = MODEL_DIR / "dl"
+MODEL_DIR_DL_PLOTS        = MODEL_DIR_DL / "plots"
+MODEL_DIR_DL_RUNS         = MODEL_DIR_DL / "runs"
+MODEL_DIR_TOPIC_DL        = MODEL_DIR / "topic_dl"
+MODEL_DIR_TOPIC_DL_PLOTS  = MODEL_DIR_TOPIC_DL / "plots"
+MODEL_DIR_TOPIC_DL_RUNS   = MODEL_DIR_TOPIC_DL / "runs"
 
-for d in [RAW_DIR, PREPROCESSED_DIR, PREPROCESSED_DIR_DL, MODEL_DIR_ML, MODEL_DIR_DL, MODEL_DIR_DL_PLOTS, MODEL_DIR_DL_RUNS]:
+for d in [RAW_DIR, PREPROCESSED_DIR, PREPROCESSED_DIR_DL, PREPROCESSED_DIR_TOPIC_DL,
+          MODEL_DIR_ML, MODEL_DIR_DL, MODEL_DIR_DL_PLOTS, MODEL_DIR_DL_RUNS,
+          MODEL_DIR_TOPIC_DL, MODEL_DIR_TOPIC_DL_PLOTS, MODEL_DIR_TOPIC_DL_RUNS]:
     d.mkdir(parents=True, exist_ok=True)
 
 #FLAGS PREPROCESSING
@@ -24,7 +30,8 @@ PREPROCESS_VECTORIZE = os.getenv("PREPROCESS_VECTORIZE", "true").lower()  == "tr
 # FLAGS GCS PREPROCESSED
 SAVE_PREPROCESSED = os.getenv("SAVE_PREPROCESSED", "false").lower() == "true"
 LOAD_PREPROCESSED = os.getenv("LOAD_PREPROCESSED", "false").lower() == "true"
-LOAD_DL_PREPROCESSED = os.getenv("LOAD_DL_PREPROCESSED", "false").lower() == "true"
+LOAD_DL_PREPROCESSED        = os.getenv("LOAD_DL_PREPROCESSED",        "false").lower() == "true"
+LOAD_TOPIC_DL_PREPROCESSED = os.getenv("LOAD_TOPIC_DL_PREPROCESSED", "false").lower() == "true"
 
 # TARGET
 MODEL_TARGET = os.getenv("MODEL_TARGET", "gcs")  # "local" | "gcs"
@@ -35,10 +42,22 @@ GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 GCS_RAW_TRAIN = f"gs://{GCS_BUCKET_NAME}/data/raw_data/fintell_train.parquet"
 GCS_RAW_VAL   = f"gs://{GCS_BUCKET_NAME}/data/raw_data/fintell_val.parquet"
 
+# GCS PREFIXES
+GCS_PREFIX_DL_DATA      = "dl_data"
+GCS_PREFIX_DL_MODELS    = "dl_models"
+GCS_PREFIX_DL_PLOTS     = "dl_plots"
+GCS_PREFIX_DL_RUNS      = "dl_runs"
+
+GCS_PREFIX_TOPIC_DL_DATA   = "topic_dl_data"
+GCS_PREFIX_TOPIC_DL_MODELS = "topic_dl_models"
+GCS_PREFIX_TOPIC_DL_PLOTS  = "topic_dl_plots"
+GCS_PREFIX_TOPIC_DL_RUNS   = "topic_dl_runs"
+
 #FLAGS MODELS
 MODEL_NAME = os.getenv("MODEL_NAME", "svc")
-MODEL_DL_NAME = os.getenv("MODEL_DL_NAME", "lstm")
-EMBEDDER_NAME = os.getenv("EMBEDDER_NAME", "word2vec")
+MODEL_DL_NAME       = os.getenv("MODEL_DL_NAME",       "lstm")
+MODEL_TOPIC_DL_NAME = os.getenv("MODEL_TOPIC_DL_NAME", "lstm")
+EMBEDDER_NAME       = os.getenv("EMBEDDER_NAME",       "word2vec")
 
 # DL HYPERPARAMS
 MAXLEN      = int(os.getenv("MAXLEN", "80"))

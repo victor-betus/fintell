@@ -104,17 +104,17 @@ def get_latest_dl_data_from_gcs(project_id, bucket_name, prefix, destination_dir
     return local_path
 
 
-def save_dl_data(array, name, split, project_id, bucket_name, destination_dir):
+def save_dl_data(array, name, split, project_id, bucket_name, destination_dir, gcs_prefix="dl_data"):
     import numpy as np
     filename = f"{name}_{split}_{RUN_TIMESTAMP}.npy"
     local_path = Path(destination_dir) / filename
     np.save(str(local_path), array)
     print(f"✅ {name} saved locally: {filename}")
-    upload_file_to_bucket(project_id, bucket_name, str(local_path), f"dl_data/{filename}")
-    print(f"✅ {name} uploaded to GCS: dl_data/{filename}")
+    upload_file_to_bucket(project_id, bucket_name, str(local_path), f"{gcs_prefix}/{filename}")
+    print(f"✅ {name} uploaded to GCS: {gcs_prefix}/{filename}")
 
 
-def load_dl_data(name, split, project_id, bucket_name, destination_dir):
+def load_dl_data(name, split, project_id, bucket_name, destination_dir, gcs_prefix="dl_data"):
     import numpy as np
-    local_path = get_latest_dl_data_from_gcs(project_id, bucket_name, f"dl_data/{name}_{split}_", destination_dir)
+    local_path = get_latest_dl_data_from_gcs(project_id, bucket_name, f"{gcs_prefix}/{name}_{split}_", destination_dir)
     return np.load(str(local_path))

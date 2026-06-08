@@ -6,7 +6,13 @@ from gensim.models import Word2Vec
 from google.cloud import storage
 from fintell_package.run_context import RUN_TIMESTAMP
 from fintell_package.data import upload_file_to_bucket, download_file_from_bucket, get_latest_dl_data_from_gcs
-from fintell_package.params import MODEL_DL_NAME, MODEL_DIR, MODEL_DIR_DL, MODEL_DIR_DL_RUNS, MODEL_NAME, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET
+from fintell_package.params import (
+    MODEL_DL_NAME, MODEL_TOPIC_DL_NAME,
+    MODEL_DIR, MODEL_DIR_DL, MODEL_DIR_DL_RUNS,
+    MODEL_DIR_TOPIC_DL, MODEL_DIR_TOPIC_DL_RUNS,
+    MODEL_NAME, GCS_PROJECT_ID, GCS_BUCKET_NAME, MODEL_TARGET,
+    GCS_PREFIX_DL_DATA, GCS_PREFIX_DL_MODELS, GCS_PREFIX_DL_PLOTS, GCS_PREFIX_DL_RUNS,
+)
 
 def save_model(model, tfidf, model_name=MODEL_NAME):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -60,80 +66,97 @@ def load_model(model_name=MODEL_NAME):
 
 # ─── DL ───────────────────────────────────────────
 
-def save_word2vec(word2vec):
-    """Save Word2Vec model locally and upload to GCS."""
+def save_word2vec(word2vec, local_dir=None, gcs_prefix=GCS_PREFIX_DL_DATA):
+    if local_dir is None:
+        local_dir = MODEL_DIR_DL
     filename = f"word2vec_{RUN_TIMESTAMP}.model"
-    local_path = MODEL_DIR_DL / filename
+    local_path = local_dir / filename
     word2vec.save(str(local_path))
     print(f"✅ Word2Vec saved locally: {filename}")
     if MODEL_TARGET == "gcs":
-        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(local_path), f"dl_data/{filename}")
-        print(f"✅ Word2Vec uploaded to GCS: dl_data/{filename}")
+        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(local_path), f"{gcs_prefix}/{filename}")
+        print(f"✅ Word2Vec uploaded to GCS: {gcs_prefix}/{filename}")
 
 
-def load_word2vec():
-    """Load the latest Word2Vec model from GCS or local."""
+def load_word2vec(local_dir=None, gcs_prefix=GCS_PREFIX_DL_DATA):
+    if local_dir is None:
+        local_dir = MODEL_DIR_DL
     if MODEL_TARGET == "gcs":
-        local_path = get_latest_dl_data_from_gcs(GCS_PROJECT_ID, GCS_BUCKET_NAME, "dl_data/word2vec_", MODEL_DIR_DL)
+        local_path = get_latest_dl_data_from_gcs(GCS_PROJECT_ID, GCS_BUCKET_NAME, f"{gcs_prefix}/word2vec_", local_dir)
     else:
-        local_path = sorted(MODEL_DIR_DL.glob("word2vec_*.model"))[-1]
+        local_path = sorted(local_dir.glob("word2vec_*.model"))[-1]
     word2vec = Word2Vec.load(str(local_path))
     print(f"📦 Word2Vec loaded: {local_path.name}")
     return word2vec
 
 
-def save_encoder(encoder):
-    """Save LabelEncoder locally and upload to GCS."""
+def save_encoder(encoder, local_dir=None, gcs_prefix=GCS_PREFIX_DL_DATA):
+    if local_dir is None:
+        local_dir = MODEL_DIR_DL
     filename = f"encoder_{RUN_TIMESTAMP}.pkl"
-    local_path = MODEL_DIR_DL / filename
+    local_path = local_dir / filename
     joblib.dump(encoder, local_path)
     print(f"✅ Encoder saved locally: {filename}")
     if MODEL_TARGET == "gcs":
-        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(local_path), f"dl_data/{filename}")
-        print(f"✅ Encoder uploaded to GCS: dl_data/{filename}")
+        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(local_path), f"{gcs_prefix}/{filename}")
+        print(f"✅ Encoder uploaded to GCS: {gcs_prefix}/{filename}")
 
 
-def load_encoder():
-    """Load the latest LabelEncoder from GCS or local."""
+def load_encoder(local_dir=None, gcs_prefix=GCS_PREFIX_DL_DATA):
+    if local_dir is None:
+        local_dir = MODEL_DIR_DL
     if MODEL_TARGET == "gcs":
-        local_path = get_latest_dl_data_from_gcs(GCS_PROJECT_ID, GCS_BUCKET_NAME, "dl_data/encoder_", MODEL_DIR_DL)
+        local_path = get_latest_dl_data_from_gcs(GCS_PROJECT_ID, GCS_BUCKET_NAME, f"{gcs_prefix}/encoder_", local_dir)
     else:
-        local_path = sorted(MODEL_DIR_DL.glob("encoder_*.pkl"))[-1]
+        local_path = sorted(local_dir.glob("encoder_*.pkl"))[-1]
     encoder = joblib.load(local_path)
     print(f"📦 Encoder loaded: {local_path.name}")
     return encoder
 
-def save_model_dl(model):
-    """Save Keras LSTM model locally and upload to GCS."""
-    filename = f"model_dl_{MODEL_DL_NAME}_{RUN_TIMESTAMP}.keras"
-    local_path = MODEL_DIR_DL / filename
+
+def save_model_dl(model, model_name=None, local_dir=None, gcs_prefix=GCS_PREFIX_DL_MODELS):
+    if model_name is None:
+        model_name = MODEL_DL_NAME
+    if local_dir is None:
+        local_dir = MODEL_DIR_DL
+    filename = f"model_dl_{model_name}_{RUN_TIMESTAMP}.keras"
+    local_path = local_dir / filename
     model.save(str(local_path))
     print(f"✅ DL Model saved locally: {filename}")
     if MODEL_TARGET == "gcs":
-        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(local_path), f"dl_models/{filename}")
-        print(f"✅ DL Model uploaded to GCS: dl_models/{filename}")
+        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(local_path), f"{gcs_prefix}/{filename}")
+        print(f"✅ DL Model uploaded to GCS: {gcs_prefix}/{filename}")
 
 
-def load_model_dl():
-    """Load the latest Keras LSTM model from GCS or local."""
+def load_model_dl(model_name=None, local_dir=None, gcs_prefix=GCS_PREFIX_DL_MODELS):
+    if model_name is None:
+        model_name = MODEL_DL_NAME
+    if local_dir is None:
+        local_dir = MODEL_DIR_DL
     if MODEL_TARGET == "gcs":
-        local_path = get_latest_dl_data_from_gcs(GCS_PROJECT_ID, GCS_BUCKET_NAME, f"dl_models/model_dl_{MODEL_DL_NAME}_", MODEL_DIR_DL)
+        local_path = get_latest_dl_data_from_gcs(GCS_PROJECT_ID, GCS_BUCKET_NAME, f"{gcs_prefix}/model_dl_{model_name}_", local_dir)
     else:
-        local_path = sorted(MODEL_DIR_DL.glob(f"model_dl_{MODEL_DL_NAME}_*.keras"))[-1]
+        local_path = sorted(local_dir.glob(f"model_dl_{model_name}_*.keras"))[-1]
     from tensorflow.keras.models import load_model
     model = load_model(str(local_path))
     print(f"📦 DL Model loaded: {local_path.name}")
     return model
 
-def save_plot(plot_path):
-    """Upload training history plot to GCS."""
-    if MODEL_TARGET == "gcs":
-        filename = f"training_history_{MODEL_DL_NAME}_{RUN_TIMESTAMP}.png"
-        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(plot_path), f"dl_plots/{filename}")
-        print(f"✅ Plot uploaded to GCS: dl_plots/{filename}")
 
-def save_run_metadata(accuracy, f1, report, params: dict):
-    """Save a JSON run card to GCS with model info and metrics."""
+def save_plot(plot_path, model_name=None, gcs_prefix=GCS_PREFIX_DL_PLOTS):
+    if model_name is None:
+        model_name = MODEL_DL_NAME
+    if MODEL_TARGET == "gcs":
+        filename = f"training_history_{model_name}_{RUN_TIMESTAMP}.png"
+        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(plot_path), f"{gcs_prefix}/{filename}")
+        print(f"✅ Plot uploaded to GCS: {gcs_prefix}/{filename}")
+
+
+def save_run_metadata(accuracy, f1, report, params: dict, model_name=None, local_dir=None, gcs_prefix=GCS_PREFIX_DL_RUNS):
+    if model_name is None:
+        model_name = MODEL_DL_NAME
+    if local_dir is None:
+        local_dir = MODEL_DIR_DL_RUNS
     metadata = {
         "timestamp": RUN_TIMESTAMP,
         "params": params,
@@ -143,10 +166,10 @@ def save_run_metadata(accuracy, f1, report, params: dict):
             "classification_report": report
         }
     }
-    filename = f"run_{MODEL_DL_NAME}_{RUN_TIMESTAMP}.json"
-    local_path = MODEL_DIR_DL_RUNS / filename
+    filename = f"run_{model_name}_{RUN_TIMESTAMP}.json"
+    local_path = local_dir / filename
     with open(local_path, 'w') as f:
         json.dump(metadata, f, indent=2)
     if MODEL_TARGET == "gcs":
-        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(local_path), f"dl_runs/{filename}")
-        print(f"✅ Run metadata uploaded to GCS: dl_runs/{filename}")
+        upload_file_to_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, str(local_path), f"{gcs_prefix}/{filename}")
+        print(f"✅ Run metadata uploaded to GCS: {gcs_prefix}/{filename}")

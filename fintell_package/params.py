@@ -37,10 +37,12 @@ GCS_RAW_VAL   = f"gs://{GCS_BUCKET_NAME}/data/raw_data/fintell_val.parquet"
 
 #FLAGS MODELS
 MODEL_NAME = os.getenv("MODEL_NAME", "svc")
+MODEL_DL_NAME = os.getenv("MODEL_DL_NAME", "lstm")
 
 # DL HYPERPARAMS
 MAXLEN      = int(os.getenv("MAXLEN", "80"))
 VECTOR_SIZE = int(os.getenv("VECTOR_SIZE", "60"))
+USE_CLASS_WEIGHT = os.getenv("USE_CLASS_WEIGHT", "false").lower() == "true"
 
 # DEV
 SAMPLE_SIZE = int(os.getenv("SAMPLE_SIZE", "0"))  # 0 = pas de sampling

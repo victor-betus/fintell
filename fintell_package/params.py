@@ -21,20 +21,20 @@ for d in [RAW_DIR, PREPROCESSED_DIR, PREPROCESSED_DIR_DL, PREPROCESSED_DIR_TOPIC
           MODEL_DIR_TOPIC_DL, MODEL_DIR_TOPIC_DL_PLOTS, MODEL_DIR_TOPIC_DL_RUNS]:
     d.mkdir(parents=True, exist_ok=True)
 
-#FLAGS PREPROCESSING
+# FLAGS PREPROCESSING — true | false
 PREPROCESS_LEMMATIZE = os.getenv("PREPROCESS_LEMMATIZE", "false").lower() == "true"
 PREPROCESS_STOPWORDS = os.getenv("PREPROCESS_STOPWORDS", "false").lower() == "true"
 PREPROCESS_SMOTE     = os.getenv("PREPROCESS_SMOTE",     "false").lower() == "true"
 PREPROCESS_VECTORIZE = os.getenv("PREPROCESS_VECTORIZE", "true").lower()  == "true"
 
-# FLAGS GCS PREPROCESSED
-SAVE_PREPROCESSED = os.getenv("SAVE_PREPROCESSED", "false").lower() == "true"
-LOAD_PREPROCESSED = os.getenv("LOAD_PREPROCESSED", "false").lower() == "true"
-LOAD_DL_PREPROCESSED        = os.getenv("LOAD_DL_PREPROCESSED",        "false").lower() == "true"
+# FLAGS GCS CACHE — true = skip preprocessing, load from GCS | false = reprocess
+SAVE_PREPROCESSED        = os.getenv("SAVE_PREPROCESSED",        "false").lower() == "true"
+LOAD_PREPROCESSED        = os.getenv("LOAD_PREPROCESSED",        "false").lower() == "true"
+LOAD_DL_PREPROCESSED     = os.getenv("LOAD_DL_PREPROCESSED",     "false").lower() == "true"
 LOAD_TOPIC_DL_PREPROCESSED = os.getenv("LOAD_TOPIC_DL_PREPROCESSED", "false").lower() == "true"
 
-# TARGET
-MODEL_TARGET = os.getenv("MODEL_TARGET", "gcs")  # "local" | "gcs"
+# TARGET — local | gcs
+MODEL_TARGET = os.getenv("MODEL_TARGET", "gcs")
 
 # GCS
 GCS_PROJECT_ID  = os.getenv("GCS_PROJECT_ID")
@@ -53,16 +53,22 @@ GCS_PREFIX_TOPIC_DL_MODELS = "topic_dl_models"
 GCS_PREFIX_TOPIC_DL_PLOTS  = "topic_dl_plots"
 GCS_PREFIX_TOPIC_DL_RUNS   = "topic_dl_runs"
 
-#FLAGS MODELS
+# FLAGS MODELS
+# MODEL_NAME: svc | logistic_regression | random_forest | naive_bayes
 MODEL_NAME = os.getenv("MODEL_NAME", "svc")
+# MODEL_DL_NAME: lstm | gru | bigru | bilstm
 MODEL_DL_NAME       = os.getenv("MODEL_DL_NAME",       "lstm")
+# MODEL_TOPIC_DL_NAME: lstm | gru | bigru | bilstm
 MODEL_TOPIC_DL_NAME = os.getenv("MODEL_TOPIC_DL_NAME", "lstm")
+# EMBEDDER_NAME: word2vec | keras_embedding
 EMBEDDER_NAME       = os.getenv("EMBEDDER_NAME",       "word2vec")
 
 # DL HYPERPARAMS
 MAXLEN      = int(os.getenv("MAXLEN", "80"))
 VECTOR_SIZE = int(os.getenv("VECTOR_SIZE", "60"))
+# USE_CLASS_WEIGHT: true = balanced class weights | false
 USE_CLASS_WEIGHT = os.getenv("USE_CLASS_WEIGHT", "false").lower() == "true"
 
 # DEV
-SAMPLE_SIZE = int(os.getenv("SAMPLE_SIZE", "0"))  # 0 = pas de sampling
+# SAMPLE_SIZE: 0 = full dataset | n = nombre de lignes
+SAMPLE_SIZE = int(os.getenv("SAMPLE_SIZE", "0"))

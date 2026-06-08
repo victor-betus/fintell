@@ -35,11 +35,16 @@ class GCSCheckpointTopic(Callback):
                 print(f"✅ Best topic model uploaded to GCS (val_acc: {val_acc:.4f})")
 
 
-def init_model(maxlen, vector_size, model_dl_name=MODEL_TOPIC_DL_NAME, num_classes=7):
+def init_model(maxlen, vector_size, model_dl_name=MODEL_TOPIC_DL_NAME, num_classes=7, vocab_size=None):
+    use_embedding = vocab_size is not None
 
     if model_dl_name == 'lstm':
         model = Sequential()
-        model.add(layers.Masking(input_shape=(maxlen, vector_size)))
+        if use_embedding:
+            model.add(layers.Input(shape=(maxlen,)))
+            model.add(layers.Embedding(vocab_size, vector_size))
+        else:
+            model.add(layers.Masking(input_shape=(maxlen, vector_size)))
         model.add(layers.LSTM(20, activation='tanh'))
         model.add(layers.Dense(15, activation='relu'))
         model.add(layers.Dense(num_classes, activation='softmax'))
@@ -50,7 +55,11 @@ def init_model(maxlen, vector_size, model_dl_name=MODEL_TOPIC_DL_NAME, num_class
 
     elif model_dl_name == 'gru':
         model = Sequential()
-        model.add(layers.Masking(input_shape=(maxlen, vector_size)))
+        if use_embedding:
+            model.add(layers.Input(shape=(maxlen,)))
+            model.add(layers.Embedding(vocab_size, vector_size))
+        else:
+            model.add(layers.Masking(input_shape=(maxlen, vector_size)))
         model.add(layers.GRU(20, activation='tanh'))
         model.add(layers.Dense(15, activation='relu'))
         model.add(layers.Dense(num_classes, activation='softmax'))
@@ -64,7 +73,11 @@ def init_model(maxlen, vector_size, model_dl_name=MODEL_TOPIC_DL_NAME, num_class
         from tensorflow.keras.optimizers import Adam
 
         model = Sequential()
-        model.add(layers.Masking(input_shape=(maxlen, vector_size)))
+        if use_embedding:
+            model.add(layers.Input(shape=(maxlen,)))
+            model.add(layers.Embedding(vocab_size, vector_size))
+        else:
+            model.add(layers.Masking(input_shape=(maxlen, vector_size)))
         model.add(layers.Bidirectional(layers.GRU(128, dropout=0.2)))
         model.add(layers.Dense(128, activation='relu', kernel_regularizer=l2(0.001)))
         model.add(layers.Dropout(0.4))
@@ -82,7 +95,11 @@ def init_model(maxlen, vector_size, model_dl_name=MODEL_TOPIC_DL_NAME, num_class
 
     elif model_dl_name == 'bilstm':
         model = Sequential()
-        model.add(layers.Masking(input_shape=(maxlen, vector_size)))
+        if use_embedding:
+            model.add(layers.Input(shape=(maxlen,)))
+            model.add(layers.Embedding(vocab_size, vector_size))
+        else:
+            model.add(layers.Masking(input_shape=(maxlen, vector_size)))
         model.add(layers.Bidirectional(layers.LSTM(20, activation='tanh')))
         model.add(layers.Dense(15, activation='relu'))
         model.add(layers.Dense(num_classes, activation='softmax'))

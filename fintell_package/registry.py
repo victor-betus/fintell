@@ -1,6 +1,4 @@
 import json
-import zipfile
-import tempfile
 import joblib
 import zipfile
 import tempfile
@@ -296,49 +294,6 @@ def load_vocab(local_dir=None, gcs_prefix=GCS_PREFIX_TOPIC_DL_DATA):
 
     return vocab
 
-def _remove_quantization_config(obj):
-    if isinstance(obj, dict):
-        obj.pop("quantization_config", None)
-
-        for value in obj.values():
-            _remove_quantization_config(value)
-
-    elif isinstance(obj, list):
-        for item in obj:
-            _remove_quantization_config(item)
-
-
-def _patch_keras_file(original_path):
-    patched_path = original_path.with_name(
-        original_path.stem + "_patched.keras"
-    )
-
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir = Path(tmpdir)
-
-        with zipfile.ZipFile(original_path, "r") as z:
-            z.extractall(tmpdir)
-
-        config_path = tmpdir / "config.json"
-
-        with open(config_path, "r") as f:
-            config = json.load(f)
-
-        _remove_quantization_config(config)
-
-        with open(config_path, "w") as f:
-            json.dump(config, f)
-
-        with zipfile.ZipFile(
-            patched_path,
-            "w",
-            zipfile.ZIP_DEFLATED
-        ) as z:
-            for file in tmpdir.rglob("*"):
-                z.write(file, file.relative_to(tmpdir))
-
-    return patched_path
-
 
 def _remove_quantization_config(obj):
     if isinstance(obj, dict):
@@ -392,22 +347,14 @@ def load_model_dl_prod(gcs_path, local_dir=None):
         GCS_PROJECT_ID,
         GCS_BUCKET_NAME,
         gcs_path,
-<<<<<<< HEAD
         str(local_path),
-=======
-        str(local_path)
->>>>>>> origin/master
     )
 
     patched_path = _patch_keras_file(local_path)
 
     model = keras_load_model(
         str(patched_path),
-<<<<<<< HEAD
         compile=False,
-=======
-        compile=False
->>>>>>> origin/master
     )
 
     print(f"📦 Model loaded: {patched_path.name}")

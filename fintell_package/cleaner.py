@@ -27,11 +27,10 @@ def clean_data(df: pd.DataFrame, inference=False) -> pd.DataFrame:
         df = df[df['review_sentiment_label'].isin(['positive', 'negative', 'neutral'])].copy()
         df = df[df['topic_label_ALL'] != 'Undefined'].copy()
 
-    # Count words and keep only reviews > 10 words
-    df['word_count'] = df['review_text'].str.split().str.len()
-    df = df[df['word_count'] > 10].copy()
-
     if not inference:
+        # Count words and keep only reviews > 10 words
+        df['word_count'] = df['review_text'].str.split().str.len()
+        df = df[df['word_count'] > 10].copy()
         # Remove useless columns
         df = df[['review_text', 'topic_label_ALL', 'review_sentiment_label']]
 

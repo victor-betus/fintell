@@ -5,7 +5,7 @@ from fintell_package.cleaner import clean_data
 from fintell_package.dl_logic.tokenizer import tokenizer
 from fintell_package.dl_logic.embedder import fit_word2vec, transform_embedding
 from fintell_package.dl_logic.encoder import fit_encoder, transform_encoder
-from fintell_package.dl_logic.model_topics_dl import init_model, train_model, evaluate_model
+from fintell_package.dl_logic.model_topics import init_model, train_model, evaluate_model
 from fintell_package.data import save_dl_data, load_dl_data
 from fintell_package.params import (
     PREPROCESSED_DIR_TOPIC_DL,

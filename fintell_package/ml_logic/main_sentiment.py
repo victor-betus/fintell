@@ -7,11 +7,11 @@ from datetime import datetime
 
 # fintell package imports
 from fintell_package.cleaner import clean_data
-from fintell_package.stopwords import stopwords
-from fintell_package.vectorizer import fit_vectorizer, transform_vectorizer
-from fintell_package.smote import oversampling_smote
-from fintell_package.lemmatizer import lemmatizer
-from fintell_package.model import train_model, evaluate_model, predict_model
+from fintell_package.ml_logic.stopwords import stopwords
+from fintell_package.ml_logic.vectorizer import fit_vectorizer, transform_vectorizer
+from fintell_package.ml_logic.smote import oversampling_smote
+from fintell_package.ml_logic.lemmatizer import lemmatizer
+from fintell_package.ml_logic.model import train_model, evaluate_model, predict_model
 from fintell_package.registry import load_model, save_model
 from fintell_package.data import upload_preprocessed_file_to_bucket, get_latest_preprocessed_from_gcs
 from fintell_package.data import upload_file_to_bucket, download_file_from_bucket

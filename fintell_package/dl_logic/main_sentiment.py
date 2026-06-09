@@ -5,8 +5,9 @@ from fintell_package.cleaner import clean_data
 from fintell_package.dl_logic.tokenizer import tokenizer
 from fintell_package.dl_logic.embedder import fit_word2vec, transform_embedding
 from fintell_package.dl_logic.encoder import fit_encoder, transform_encoder
-from fintell_package.dl_logic.model_dl import init_model, train_model, evaluate_model
+from fintell_package.dl_logic.model_sentiment import init_model, train_model, evaluate_model
 from fintell_package.data import save_dl_data, load_dl_data
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 from fintell_package.params import (
     PREPROCESSED_DIR_DL,
     GCS_PROJECT_ID, GCS_BUCKET_NAME,
@@ -122,6 +123,16 @@ def evaluate():
         "use_class_weight": USE_CLASS_WEIGHT,
         "embedder_name": EMBEDDER_NAME,
     })
+
+
+def predict_sentiment(texts, model, tokenizer_obj, encoder):
+    """Inférence BiGRU + Keras Embedding — utilisée par l'API uniquement."""
+    sequences = tokenizer_obj.texts_to_sequences(texts.tolist())
+    X_pad = pad_sequences(sequences, maxlen=MAXLEN, padding='post', truncating='post')
+    proba = model.predict(X_pad)
+    labels = encoder.inverse_transform(np.argmax(proba, axis=1))
+    confidences = np.max(proba, axis=1)
+    return labels, confidences
 
 
 if __name__ == "__main__":

@@ -1,4 +1,6 @@
 import json
+import zipfile
+import tempfile
 import joblib
 from pathlib import Path
 from datetime import datetime
@@ -176,15 +178,74 @@ def load_vocab(local_dir=None, gcs_prefix=GCS_PREFIX_TOPIC_DL_DATA):
     print(f"📦 Vocab loaded: {local_path.name}")
     return vocab
 
+def _remove_quantization_config(obj):
+    if isinstance(obj, dict):
+        obj.pop("quantization_config", None)
+
+        for value in obj.values():
+            _remove_quantization_config(value)
+
+    elif isinstance(obj, list):
+        for item in obj:
+            _remove_quantization_config(item)
+
+
+def _patch_keras_file(original_path):
+    patched_path = original_path.with_name(
+        original_path.stem + "_patched.keras"
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir = Path(tmpdir)
+
+        with zipfile.ZipFile(original_path, "r") as z:
+            z.extractall(tmpdir)
+
+        config_path = tmpdir / "config.json"
+
+        with open(config_path, "r") as f:
+            config = json.load(f)
+
+        _remove_quantization_config(config)
+
+        with open(config_path, "w") as f:
+            json.dump(config, f)
+
+        with zipfile.ZipFile(
+            patched_path,
+            "w",
+            zipfile.ZIP_DEFLATED
+        ) as z:
+            for file in tmpdir.rglob("*"):
+                z.write(file, file.relative_to(tmpdir))
+
+    return patched_path
+
 
 def load_model_dl_prod(gcs_path, local_dir=None):
     from tensorflow.keras.models import load_model as keras_load_model
+
     if local_dir is None:
         local_dir = MODEL_DIR_DL
+
     local_path = local_dir / Path(gcs_path).name
-    download_file_from_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, gcs_path, str(local_path))
-    model = keras_load_model(str(local_path))
-    print(f"📦 Model loaded: {local_path.name}")
+
+    download_file_from_bucket(
+        GCS_PROJECT_ID,
+        GCS_BUCKET_NAME,
+        gcs_path,
+        str(local_path)
+    )
+
+    patched_path = _patch_keras_file(local_path)
+
+    model = keras_load_model(
+        str(patched_path),
+        compile=False
+    )
+
+    print(f"📦 Model loaded: {patched_path.name}")
+
     return model
 
 

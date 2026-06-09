@@ -177,6 +177,37 @@ def load_vocab(local_dir=None, gcs_prefix=GCS_PREFIX_TOPIC_DL_DATA):
     return vocab
 
 
+def load_model_dl_prod(gcs_path, local_dir=None):
+    from tensorflow.keras.models import load_model as keras_load_model
+    if local_dir is None:
+        local_dir = MODEL_DIR_DL
+    local_path = local_dir / Path(gcs_path).name
+    download_file_from_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, gcs_path, str(local_path))
+    model = keras_load_model(str(local_path))
+    print(f"📦 Model loaded: {local_path.name}")
+    return model
+
+
+def load_encoder_prod(gcs_path, local_dir=None):
+    if local_dir is None:
+        local_dir = MODEL_DIR_DL
+    local_path = local_dir / Path(gcs_path).name
+    download_file_from_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, gcs_path, str(local_path))
+    encoder = joblib.load(local_path)
+    print(f"📦 Encoder loaded: {local_path.name}")
+    return encoder
+
+
+def load_tokenizer_prod(gcs_path, local_dir=None):
+    if local_dir is None:
+        local_dir = MODEL_DIR_DL
+    local_path = local_dir / Path(gcs_path).name
+    download_file_from_bucket(GCS_PROJECT_ID, GCS_BUCKET_NAME, gcs_path, str(local_path))
+    tok = joblib.load(local_path)
+    print(f"📦 Tokenizer/vocab loaded: {local_path.name}")
+    return tok
+
+
 def save_run_metadata(accuracy, f1, report, params: dict, model_name=None, local_dir=None, gcs_prefix=GCS_PREFIX_DL_RUNS):
     if model_name is None:
         model_name = MODEL_DL_NAME

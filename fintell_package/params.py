@@ -78,6 +78,6 @@ GCS_PROD_SENTIMENT_MODEL     = os.getenv("GCS_PROD_SENTIMENT_MODEL",     "produc
 GCS_PROD_SENTIMENT_ENCODER   = os.getenv("GCS_PROD_SENTIMENT_ENCODER",   "production/sentiments/label_encoder.pkl")
 GCS_PROD_SENTIMENT_TOKENIZER = os.getenv("GCS_PROD_SENTIMENT_TOKENIZER", "production/sentiments/tokenizer.pkl")
 
-GCS_PROD_TOPIC_MODEL   = os.getenv("GCS_PROD_TOPIC_MODEL",   "topic_dl_models/model_dl_bigru_20260608_145844.keras")
-GCS_PROD_TOPIC_ENCODER = os.getenv("GCS_PROD_TOPIC_ENCODER", "topic_dl_data/encoder_20260608_145844.pkl")
-GCS_PROD_TOPIC_VOCAB   = os.getenv("GCS_PROD_TOPIC_VOCAB",   "topic_dl_data/vocab_20260608_145844.pkl")
+GCS_PROD_TOPIC_MODEL   = os.getenv("GCS_PROD_TOPIC_MODEL",   "production/topic/model_dl_bigru_20260608_145844.keras")
+GCS_PROD_TOPIC_ENCODER = os.getenv("GCS_PROD_TOPIC_ENCODER", "production/topic/encoder_20260608_145844.pkl")
+GCS_PROD_TOPIC_VOCAB   = os.getenv("GCS_PROD_TOPIC_VOCAB",   "production/topic/vocab_20260608_145844.pkl")

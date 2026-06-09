@@ -165,6 +165,20 @@ def evaluate():
     }, model_name=MODEL_TOPIC_DL_NAME, local_dir=MODEL_DIR_TOPIC_DL_RUNS, gcs_prefix=GCS_PREFIX_TOPIC_DL_RUNS)
 
 
+def predict_topic(texts, model, tokenizer_obj, encoder, vocab=None):
+    """Inférence topics — utilisée par l'API uniquement."""
+    X_tok = tokenizer(texts)
+    if vocab is not None:
+        X_int = [[vocab.get(t, 0) for t in tokens] for tokens in X_tok]
+    else:
+        X_int = tokenizer_obj.texts_to_sequences(texts.tolist())
+    X_pad = pad_sequences(X_int, maxlen=MAXLEN, padding='post', truncating='post')
+    proba = model.predict(X_pad)
+    labels = encoder.inverse_transform(np.argmax(proba, axis=1))
+    confidences = np.max(proba, axis=1)
+    return labels, confidences
+
+
 if __name__ == "__main__":
     preprocess_topic('train')
     preprocess_topic('val')

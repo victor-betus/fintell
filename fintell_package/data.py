@@ -2,8 +2,6 @@ from pathlib import Path
 from google.cloud import storage
 from datetime import datetime
 from fintell_package.run_context import RUN_TIMESTAMP
-from fintell_package.gcs_loader import upload_file_to_bucket  # re-exporté depuis gcs_loader
-
 from fintell_package.params import (
     MODEL_NAME,
     RAW_DIR, PREPROCESSED_DIR,
@@ -34,6 +32,24 @@ def upload_preprocessed_file_to_bucket(
     file_size_mb = Path(local_file).stat().st_size / (1024 * 1024)
     print("✅ Upload terminé")
     print(f"📄 Fichier : {Path(local_file).name}")
+    print(f"📦 Taille : {file_size_mb:.2f} MB")
+    print(f"📍 Stocké dans : gs://{bucket_name}/{destination_path}")
+
+
+def upload_file_to_bucket(
+    project_id: str,
+    bucket_name: str,
+    local_file: str,
+    destination_path: str
+) -> None:
+    client = storage.Client(project=project_id)
+    bucket = client.bucket(bucket_name)
+    local_path = Path(local_file)
+    blob = bucket.blob(destination_path)
+    blob.upload_from_filename(str(local_path))
+    file_size_mb = local_path.stat().st_size / (1024 * 1024)
+    print("✅ Upload terminé")
+    print(f"📄 Fichier : {local_path.name}")
     print(f"📦 Taille : {file_size_mb:.2f} MB")
     print(f"📍 Stocké dans : gs://{bucket_name}/{destination_path}")
 
